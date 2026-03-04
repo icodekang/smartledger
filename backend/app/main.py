@@ -8,6 +8,7 @@ from app.core.response import APIResponse, success_response, error_response
 from app.core.exception_handler import register_exception_handlers
 from app.core.middleware import log_requests
 from app.core.exceptions import BusinessException
+from app.api.v1.router import router as api_router
 
 
 @asynccontextmanager
@@ -38,6 +39,9 @@ app.middleware("http")(log_requests)
 
 # 注册异常处理器
 register_exception_handlers(app)
+
+# 注册API路由
+app.include_router(api_router)
 
 
 @app.get("/health")
