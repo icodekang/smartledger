@@ -1,0 +1,88 @@
+from typing import List, Dict
+from pydantic import BaseModel
+
+from app.services.llm_service import DeepSeekService
+
+
+class VoucherEntry(BaseModel):
+    """分录项"""
+    subject_code: str
+    subject_name: str
+    debit: float
+    credit: float
+    summary: str
+
+
+class VoucherDraft(BaseModel):
+    """凭证草稿"""
+    voucher_date: str
+    summary: str
+    entries: List[VoucherEntry]
+    confidence: float
+    reason: str
+    needs_review: bool
+
+
+class VoucherAgent:
+    """记账核算Agent"""
+    
+    def __init__(self):
+        self.llm_service = DeepSeekService()
+    
+    async def generate(self, bill_data: Dict, customer_context: Dict) -> VoucherDraft:
+        """生成凭证草稿"""
+        # 使用LLM推荐
+        llm_result = await self.recommend_with_llm(bill_data, customer_context)
+        
+        if llm_result:
+            entries = llm_result.get("entries", [])
+            confidence = llm_result.get("confidence", 50)
+            reason = f"AI推荐: {llm_result.get('reasoning', '')}"
+        else:
+            entries = []
+            confidence = 0
+            reason = "无法生成凭证"
+        
+        needs_review = confidence < 85
+        
+        return VoucherDraft(
+            voucher_date=bill_data.get('invoice_date'),
+            summary=self._generate_summary(bill_data),
+            entries=[VoucherEntry(**e) for e in entries],
+            confidence=confidence,
+            reason=reason,
+            needs_review=needs_review
+        )
+    
+    async def recommend_with_llm(self, bill_data: Dict, customer_context: Dict) -> Dict:
+        """使用LLM推荐"""
+        prompt = f"""根据以下票据信息生成会计分录：
+票据类型: {bill_data.get('invoice_type')}
+金额: {bill_data.get('total_amount')}
+商品: {bill_data.get('goods_name')}
+
+请以JSON格式返回：
+{{
+    "entries": [
+        {{"subject_code": "科目代码", "subject_name": "科目名称", "debit": 借方金额, "credit": 贷方金额, "summary": "摘要"}}
+    ],
+    "confidence": 置信度0-100,
+    "reasoning": "推理说明"
+}}"""
+        
+        return await self.llm_service.json_completion(
+            system_prompt="你是一个专业的会计师，请根据票据信息生成准确的会计分录。",
+            user_prompt=prompt
+        )
+    
+    def _generate_summary(self, bill_data: Dict) -> str:
+        """生成摘要"""
+        goods_name = bill_data.get('goods_name', '')
+        seller_name = bill_data.get('seller_name', '')
+        
+        if goods_name:
+            return f"采购{goods_name}"
+        elif seller_name:
+            return f"应付{seller_name}货款"
+        else:
+            return "采购商品"
