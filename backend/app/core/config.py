@@ -30,6 +30,11 @@ class Settings(BaseSettings):
     DEEPSEEK_MODEL: str = "deepseek-chat"
     DEEPSEEK_BASE_URL: str = "https://api.deepseek.com/v1"
     
+    # 百度OCR
+    BAIDU_APP_ID: str = ""
+    BAIDU_API_KEY: str = ""
+    BAIDU_SECRET_KEY: str = ""
+    
     class Config:
         env_file = ".env"
 
