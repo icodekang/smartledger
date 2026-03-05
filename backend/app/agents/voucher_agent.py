@@ -2,6 +2,7 @@ from typing import List, Dict
 from pydantic import BaseModel
 
 from app.services.llm_service import DeepSeekService
+from app.services.rule_engine import RuleEngine
 
 
 class VoucherEntry(BaseModel):
@@ -28,20 +29,29 @@ class VoucherAgent:
     
     def __init__(self):
         self.llm_service = DeepSeekService()
+        self.rule_engine = RuleEngine()
     
     async def generate(self, bill_data: Dict, customer_context: Dict) -> VoucherDraft:
         """生成凭证草稿"""
-        # 使用LLM推荐
-        llm_result = await self.recommend_with_llm(bill_data, customer_context)
+        # 1. 尝试规则匹配
+        rule_result = self.rule_engine.match(bill_data, customer_context)
         
-        if llm_result:
-            entries = llm_result.get("entries", [])
-            confidence = llm_result.get("confidence", 50)
-            reason = f"AI推荐: {llm_result.get('reasoning', '')}"
+        if rule_result:
+            rule_id, entries = rule_result
+            confidence = 95
+            reason = f"规则匹配: {rule_id}"
         else:
-            entries = []
-            confidence = 0
-            reason = "无法生成凭证"
+            # 2. 使用LLM推荐
+            llm_result = await self.recommend_with_llm(bill_data, customer_context)
+            
+            if llm_result:
+                entries = llm_result.get("entries", [])
+                confidence = llm_result.get("confidence", 50)
+                reason = f"AI推荐: {llm_result.get('reasoning', '')}"
+            else:
+                entries = []
+                confidence = 0
+                reason = "无法生成凭证"
         
         needs_review = confidence < 85
         
@@ -56,10 +66,13 @@ class VoucherAgent:
     
     async def recommend_with_llm(self, bill_data: Dict, customer_context: Dict) -> Dict:
         """使用LLM推荐"""
+        from app.agents.prompts.bill_prompts import VOUCHER_GENERATION_PROMPT
+        
         prompt = f"""根据以下票据信息生成会计分录：
 票据类型: {bill_data.get('invoice_type')}
 金额: {bill_data.get('total_amount')}
 商品: {bill_data.get('goods_name')}
+纳税人类型: {customer_context.get('taxpayer_type', 'general')}
 
 请以JSON格式返回：
 {{
@@ -71,7 +84,7 @@ class VoucherAgent:
 }}"""
         
         return await self.llm_service.json_completion(
-            system_prompt="你是一个专业的会计师，请根据票据信息生成准确的会计分录。",
+            system_prompt=VOUCHER_GENERATION_PROMPT,
             user_prompt=prompt
         )
     

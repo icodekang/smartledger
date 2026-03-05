@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.endpoints import auth, users, files
+from app.api.endpoints import auth, users, files, vouchers
 
 router = APIRouter(prefix="/api/v1")
 
@@ -8,3 +8,4 @@ router = APIRouter(prefix="/api/v1")
 router.include_router(auth.router)
 router.include_router(users.router)
 router.include_router(files.router)
+router.include_router(vouchers.router)
