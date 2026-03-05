@@ -64,6 +64,46 @@ class VoucherAgent:
             needs_review=needs_review
         )
     
+    async def generate_voucher_from_bill(self, bill, db) -> Dict:
+        """从票据生成凭证数据"""
+        # 构建票据数据
+        bill_data = {
+            "invoice_type": bill.bill_type,
+            "invoice_code": bill.invoice_code,
+            "invoice_number": bill.invoice_number,
+            "invoice_date": bill.invoice_date.isoformat() if bill.invoice_date else None,
+            "seller_name": bill.seller_name,
+            "amount": float(bill.amount) if bill.amount else 0,
+            "tax_amount": float(bill.tax_amount) if bill.tax_amount else 0,
+            "total_amount": float(bill.total_amount) if bill.total_amount else 0,
+            "goods_name": bill.ocr_result.get("goods_name", "") if bill.ocr_result else ""
+        }
+        
+        # 获取客户上下文
+        from app.repositories.customer import CustomerRepository
+        customer_repo = CustomerRepository()
+        customer = customer_repo.get(db, bill.customer_id)
+        
+        customer_context = {
+            "taxpayer_type": "general",  # 默认为一般纳税人
+            "industry": ""
+        }
+        if customer:
+            customer_context = {
+                "taxpayer_type": getattr(customer, "taxpayer_type", "general"),
+                "industry": getattr(customer, "industry", "")
+            }
+        
+        # 生成凭证
+        draft = await self.generate(bill_data, customer_context)
+        
+        return {
+            "summary": draft.summary,
+            "entries": [entry.dict() for entry in draft.entries],
+            "confidence": draft.confidence,
+            "reason": draft.reason
+        }
+    
     async def recommend_with_llm(self, bill_data: Dict, customer_context: Dict) -> Dict:
         """使用LLM推荐"""
         from app.agents.prompts.bill_prompts import VOUCHER_GENERATION_PROMPT

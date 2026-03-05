@@ -80,6 +80,37 @@ class BillAgent:
             needs_review=needs_review
         )
     
+    async def process_bill_image(self, image_bytes: bytes, content_type: str) -> Optional[dict]:
+        """处理票据图片并返回OCR结果"""
+        # 临时保存文件进行OCR
+        import tempfile
+        import os
+        
+        suffix = ".jpg" if "jpeg" in content_type else ".png" if "png" in content_type else ".pdf"
+        
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            tmp.write(image_bytes)
+            tmp_path = tmp.name
+        
+        try:
+            ocr_result = await self.ocr_service.recognize_vat_invoice(tmp_path)
+            if ocr_result:
+                # 使用LLM增强
+                enhanced = await self.enhance_understanding(ocr_result)
+                return {
+                    "invoice_code": enhanced.get("invoice_code"),
+                    "invoice_number": enhanced.get("invoice_number"),
+                    "invoice_date": enhanced.get("invoice_date"),
+                    "seller_name": enhanced.get("seller_name"),
+                    "amount": enhanced.get("amount"),
+                    "tax_amount": enhanced.get("tax_amount"),
+                    "total_amount": enhanced.get("total_amount"),
+                    "confidence": enhanced.get("confidence", 0.9)
+                }
+            return None
+        finally:
+            os.unlink(tmp_path)
+    
     async def enhance_understanding(self, ocr_result: dict) -> dict:
         """增强理解"""
         from app.agents.prompts.bill_prompts import (

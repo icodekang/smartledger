@@ -1,8 +1,9 @@
 from datetime import datetime
+from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
-from app.core.security import verify_password, create_access_token
+from app.core.security import verify_password, create_access_token, get_password_hash
 from app.core.exceptions import AuthenticationException
 from app.core.config import settings
 from app.models.user import User
@@ -42,3 +43,26 @@ class AuthService:
                 "role": user.role
             }
         )
+    
+    async def register(self, username: str, password: str, name: str, db: Session) -> User:
+        """用户注册"""
+        # 检查用户名是否已存在
+        existing_user = db.query(User).filter(User.username == username).first()
+        if existing_user:
+            raise Exception("用户名已存在")
+        
+        # 创建新用户
+        user = User(
+            id=uuid4(),
+            username=username,
+            password_hash=get_password_hash(password),
+            name=name,
+            role="customer",  # 默认角色
+            is_active=True
+        )
+        
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        
+        return user

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.endpoints import auth, users, files, vouchers
+from app.api.endpoints import auth, users, files, vouchers, bills, bank_flows, audit
 
 router = APIRouter(prefix="/api/v1")
 
@@ -9,3 +9,6 @@ router.include_router(auth.router)
 router.include_router(users.router)
 router.include_router(files.router)
 router.include_router(vouchers.router)
+router.include_router(bills.router)
+router.include_router(bank_flows.router)
+router.include_router(audit.router)
