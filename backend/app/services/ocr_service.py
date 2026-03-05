@@ -1,12 +1,15 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Union
 import base64
+import io
+import tempfile
+import os
 
 from app.core.config import settings
 from app.core.logging import logger
 
 
 class OCRService:
-    """百度OCR服务"""
+    """百度OCR服务 - 支持PDF和图片"""
     
     def __init__(self):
         self.app_id = settings.BAIDU_APP_ID
@@ -21,16 +24,27 @@ class OCRService:
             except ImportError:
                 logger.warning("baidu-aip not installed, OCR will be mocked")
     
-    async def recognize_vat_invoice(self, image_path: str) -> Optional[Dict[str, Any]]:
-        """识别增值税发票"""
+    async def recognize_vat_invoice(self, file_path: str) -> Optional[Dict[str, Any]]:
+        """识别增值税发票（支持PDF和图片）"""
         if not self.client:
             logger.warning("OCR client not initialized, returning mock data")
             return self._mock_invoice_data()
         
         try:
-            with open(image_path, 'rb') as f:
-                image_data = f.read()
+            # 检查文件类型
+            is_pdf = file_path.lower().endswith('.pdf')
             
+            if is_pdf:
+                # PDF处理：转换为图片
+                image_data = await self._convert_pdf_to_image(file_path)
+                if not image_data:
+                    return None
+            else:
+                # 直接读取图片
+                with open(file_path, 'rb') as f:
+                    image_data = f.read()
+            
+            # 调用OCR
             result = self.client.vatInvoice(image_data)
             
             if 'words_result' in result:
@@ -41,6 +55,116 @@ class OCRService:
                 
         except Exception as e:
             logger.error(f"OCR error: {e}")
+            return None
+    
+    async def recognize_vat_invoice_from_bytes(self, file_bytes: bytes, filename: str) -> Optional[Dict[str, Any]]:
+        """从字节流识别发票（支持PDF和图片）"""
+        if not self.client:
+            logger.warning("OCR client not initialized, returning mock data")
+            return self._mock_invoice_data()
+        
+        try:
+            # 检查文件类型
+            is_pdf = filename.lower().endswith('.pdf')
+            
+            if is_pdf:
+                # PDF处理：先保存临时文件，再转换
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_pdf:
+                    tmp_pdf.write(file_bytes)
+                    tmp_pdf_path = tmp_pdf.name
+                
+                try:
+                    image_data = await self._convert_pdf_to_image(tmp_pdf_path)
+                    if not image_data:
+                        return None
+                finally:
+                    os.unlink(tmp_pdf_path)
+            else:
+                image_data = file_bytes
+            
+            # 调用OCR
+            result = self.client.vatInvoice(image_data)
+            
+            if 'words_result' in result:
+                return self._parse_vat_invoice(result['words_result'])
+            else:
+                logger.error(f"OCR failed: {result}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"OCR error: {e}")
+            return None
+    
+    async def _convert_pdf_to_image(self, pdf_path: str) -> Optional[bytes]:
+        """将PDF第一页转换为图片"""
+        try:
+            # 尝试使用pdf2image
+            try:
+                from pdf2image import convert_from_path
+                images = convert_from_path(pdf_path, first_page=1, last_page=1, dpi=200)
+                if images:
+                    img_byte_arr = io.BytesIO()
+                    images[0].save(img_byte_arr, format='JPEG', quality=95)
+                    return img_byte_arr.getvalue()
+            except ImportError:
+                logger.warning("pdf2image not installed, trying PyMuPDF")
+            
+            # 备选：使用PyMuPDF
+            try:
+                import fitz  # PyMuPDF
+                doc = fitz.open(pdf_path)
+                page = doc[0]
+                
+                # 提高分辨率
+                mat = fitz.Matrix(2.0, 2.0)
+                pix = page.get_pixmap(matrix=mat)
+                
+                # 转换为JPEG
+                img_data = pix.tobytes("jpeg")
+                doc.close()
+                return img_data
+            except ImportError:
+                logger.warning("PyMuPDF not installed, trying pypdf")
+            
+            # 最后备选：使用pypdf + Pillow（仅提取图片）
+            try:
+                from pypdf import PdfReader
+                from PIL import Image
+                
+                reader = PdfReader(pdf_path)
+                page = reader.pages[0]
+                
+                # 尝试提取页面中的图片
+                if "/XObject" in page["/Resources"]:
+                    xObject = page["/Resources"]["/XObject"].get_object()
+                    
+                    for obj in xObject:
+                        if xObject[obj]["/Subtype"] == "/Image":
+                            try:
+                                size = (xObject[obj]["/Width"], xObject[obj]["/Height"])
+                                data = xObject[obj].get_data()
+                                
+                                if xObject[obj]["/Filter"] == "/DCTDecode":
+                                    # JPEG格式
+                                    return data
+                                elif xObject[obj]["/Filter"] == "/FlateDecode":
+                                    # 需要解码
+                                    img = Image.frombytes("RGB", size, data)
+                                    img_byte_arr = io.BytesIO()
+                                    img.save(img_byte_arr, format='JPEG')
+                                    return img_byte_arr.getvalue()
+                            except Exception as e:
+                                logger.warning(f"Failed to extract image: {e}")
+                                continue
+                
+                logger.error("No extractable image found in PDF")
+                return None
+            except ImportError:
+                logger.error("No PDF conversion library available")
+                return None
+                
+        except Exception as e:
+            logger.error(f"PDF conversion error: {e}")
             return None
     
     def _parse_vat_invoice(self, words_result: dict) -> dict:

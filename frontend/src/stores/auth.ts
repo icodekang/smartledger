@@ -1,22 +1,42 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { authApi, type UserInfo } from '../api/auth'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('token') || '')
-  const user = ref({})
+  const user = ref<UserInfo | null>(null)
+  const isLoggedIn = computed(() => !!token.value)
   
-  const login = async (username: string, password: string) => {
-    // 模拟登录
-    token.value = 'mock-token'
-    user.value = { username, role: 'admin' }
-    localStorage.setItem('token', token.value)
+  const login = async (accessToken: string, userInfo: UserInfo) => {
+    token.value = accessToken
+    user.value = userInfo
+    localStorage.setItem('token', accessToken)
+  }
+  
+  const fetchUserInfo = async () => {
+    if (!token.value) return
+    try {
+      const res = await authApi.getMe()
+      user.value = res
+      return res
+    } catch (error) {
+      logout()
+      throw error
+    }
   }
   
   const logout = () => {
     token.value = ''
-    user.value = {}
+    user.value = null
     localStorage.removeItem('token')
   }
   
-  return { token, user, login, logout }
+  return { 
+    token, 
+    user, 
+    isLoggedIn,
+    login, 
+    logout,
+    fetchUserInfo
+  }
 })
