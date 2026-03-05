@@ -1,89 +1,86 @@
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
+from typing import Optional, List
 from sqlalchemy.orm import Session
+from datetime import datetime
 
 from app.core.database import get_db
 from app.core.response import success_response, error_response
 from app.core.permissions import require_permission
+from app.models.voucher import Voucher, VoucherItem
 from app.services.state_machine import VoucherStateMachine
-from app.models.voucher import Voucher
 
-router = APIRouter(prefix="/vouchers", tags=["凭证审核"])
+router = APIRouter(prefix="/vouchers", tags=["凭证"])
+
+
+class AuditRequest(BaseModel):
+    """审核请求"""
+    action: str
+    note: Optional[str] = None
+    modified_entries: Optional[List[dict]] = None
 
 
 @router.post("/{voucher_id}/audit")
 async def audit_voucher(
     voucher_id: str,
-    action: str,
-    note: str = "",
+    request: AuditRequest,
     current_user=Depends(require_permission("vouchers:audit")),
     db: Session = Depends(get_db)
 ):
-    """凭证审核"""
+    """审核凭证"""
     voucher = db.query(Voucher).filter(Voucher.id == voucher_id).first()
     if not voucher:
         return error_response(404, "Voucher not found")
     
-    # 确定目标状态
-    status_map = {
+    # 检查权限
+    if str(voucher.assigned_to) != str(current_user.id) and current_user.role != "admin":
+        return error_response(403, "Permission denied")
+    
+    # 状态流转映射
+    action_to_status = {
         "approve": "approved",
         "reject": "rejected",
-        "post": "posted"
+        "modify": "approved"
     }
     
-    to_status = status_map.get(action)
-    if not to_status:
-        return error_response(400, f"Invalid action: {action}")
+    new_status = action_to_status.get(request.action)
+    if not new_status:
+        return error_response(400, f"Invalid action: {request.action}")
     
     # 验证状态流转
-    valid, message = VoucherStateMachine.validate_transition(
-        voucher.status, to_status
+    is_valid, error_msg = VoucherStateMachine.validate_transition(
+        voucher.status, new_status
     )
-    if not valid:
-        return error_response(400, message)
+    if not is_valid:
+        return error_response(400, error_msg)
     
-    # 更新状态
-    voucher.status = to_status
+    # 如果是修改，更新分录
+    if request.action == "modify" and request.modified_entries:
+        db.query(VoucherItem).filter(VoucherItem.voucher_id == voucher_id).delete()
+        
+        for entry_data in request.modified_entries:
+            item = VoucherItem(
+                voucher_id=voucher_id,
+                line_no=entry_data.get("line_no", 0),
+                subject_code=entry_data.get("subject_code", ""),
+                subject_name=entry_data.get("subject_name", ""),
+                debit_amount=entry_data.get("debit", 0),
+                credit_amount=entry_data.get("credit", 0),
+                summary=entry_data.get("summary", "")
+            )
+            db.add(item)
+    
+    # 更新凭证状态
+    voucher.status = new_status
     voucher.auditor_id = current_user.id
-    from datetime import datetime
-    voucher.audited_at = datetime.utcnow()
+    voucher.audit_note = request.note
+    voucher.audited_at = datetime.now()
     
     db.commit()
-    db.refresh(voucher)
     
     return success_response(data={
-        "voucher_id": str(voucher.id),
-        "status": voucher.status,
-        "auditor_id": str(current_user.id)
-    })
-
-
-@router.get("/workbench/pending")
-async def get_pending_vouchers(
-    page: int = 1,
-    page_size: int = 20,
-    current_user=Depends(require_permission("vouchers:audit")),
-    db: Session = Depends(get_db)
-):
-    """获取待审凭证列表"""
-    from sqlalchemy import func
-    
-    query = db.query(Voucher).filter(Voucher.status == "pending")
-    
-    total = query.count()
-    items = query.offset((page - 1) * page_size).limit(page_size).all()
-    
-    return success_response(data={
-        "items": [
-            {
-                "id": str(v.id),
-                "voucher_no": v.voucher_no,
-                "summary": v.summary,
-                "ai_confidence": float(v.ai_confidence) if v.ai_confidence else 0,
-                "status": v.status
-            }
-            for v in items
-        ],
-        "total": total,
-        "page": page,
-        "page_size": page_size
+        "voucher_id": voucher_id,
+        "status": new_status,
+        "auditor": current_user.username,
+        "audited_at": voucher.audited_at.isoformat() if voucher.audited_at else None
     })

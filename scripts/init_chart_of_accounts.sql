@@ -1,4 +1,5 @@
--- 小企业会计准则科目表初始化
+-- scripts/init_chart_of_accounts.sql
+-- 小企业会计准则科目表
 
 -- 资产类
 INSERT INTO account_subjects (code, name, category, direction) VALUES

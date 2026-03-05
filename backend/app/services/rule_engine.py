@@ -18,6 +18,7 @@ class RuleEngine:
     
     def __init__(self):
         self.rules = self._load_rules()
+        self.subject_names = self._get_subject_names()
     
     def _load_rules(self) -> List[VoucherRule]:
         """加载规则"""
@@ -81,8 +82,19 @@ class RuleEngine:
             ),
         ]
     
+    def _get_subject_names(self) -> Dict[str, str]:
+        """获取科目名称映射"""
+        return {
+            "1403": "原材料",
+            "2202": "应付账款",
+            "560201": "管理费用-办公费",
+            "560202": "管理费用-差旅费",
+            "560203": "管理费用-业务招待费",
+            "222101": "应交税费-应交增值税-进项税额",
+        }
+    
     def match(self, bill_data: Dict, customer_context: Dict) -> Optional[Tuple[str, List[Dict]]]:
-        """匹配规则"""
+        """匹配规则并生成分录"""
         sorted_rules = sorted(self.rules, key=lambda r: r.priority, reverse=True)
         
         for rule in sorted_rules:
@@ -93,7 +105,7 @@ class RuleEngine:
         return None
     
     def _check_conditions(self, conditions: Dict, bill_data: Dict, customer_context: Dict) -> bool:
-        """检查条件"""
+        """检查条件是否匹配"""
         for key, expected in conditions.items():
             if key == "keywords":
                 goods_name = bill_data.get("goods_name", "")
@@ -114,20 +126,20 @@ class RuleEngine:
         return True
     
     def _generate_entries(self, rule: VoucherRule, bill_data: Dict, customer_context: Dict) -> List[Dict]:
-        """生成分录"""
-        amount = bill_data.get("amount", 0)
-        tax_amount = bill_data.get("tax_amount", 0)
-        total_amount = bill_data.get("total_amount", 0)
+        """生成会计分录"""
+        amount = float(bill_data.get("amount", 0) or 0)
+        tax_amount = float(bill_data.get("tax_amount", 0) or 0)
+        total_amount = float(bill_data.get("total_amount", 0) or 0)
         
         is_general = customer_context.get("taxpayer_type") == "general"
-        has_tax = tax_amount and tax_amount > 0
+        has_tax = tax_amount > 0
         
         entries = []
         
         if is_general and has_tax:
             entries.append({
                 "subject_code": rule.debit_subject,
-                "subject_name": self._get_subject_name(rule.debit_subject),
+                "subject_name": self.subject_names.get(rule.debit_subject, rule.debit_subject),
                 "debit": amount,
                 "credit": 0,
                 "summary": f"采购{bill_data.get('goods_name', '商品')}"
@@ -142,7 +154,7 @@ class RuleEngine:
         else:
             entries.append({
                 "subject_code": rule.debit_subject,
-                "subject_name": self._get_subject_name(rule.debit_subject),
+                "subject_name": self.subject_names.get(rule.debit_subject, rule.debit_subject),
                 "debit": total_amount,
                 "credit": 0,
                 "summary": f"采购{bill_data.get('goods_name', '商品')}"
@@ -150,22 +162,10 @@ class RuleEngine:
         
         entries.append({
             "subject_code": rule.credit_subject,
-            "subject_name": self._get_subject_name(rule.credit_subject),
+            "subject_name": self.subject_names.get(rule.credit_subject, rule.credit_subject),
             "debit": 0,
             "credit": total_amount,
             "summary": f"应付{bill_data.get('seller_name', '供应商')}货款"
         })
         
         return entries
-    
-    def _get_subject_name(self, code: str) -> str:
-        """获取科目名称"""
-        subject_names = {
-            "1403": "原材料",
-            "2202": "应付账款",
-            "560201": "管理费用-办公费",
-            "560202": "管理费用-差旅费",
-            "560203": "管理费用-业务招待费",
-            "222101": "应交税费-应交增值税-进项税额",
-        }
-        return subject_names.get(code, code)

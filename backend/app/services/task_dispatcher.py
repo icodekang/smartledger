@@ -1,9 +1,10 @@
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
 
 
 @dataclass
 class Accountant:
+    """会计"""
     id: str
     name: str
     max_capacity: int
@@ -15,6 +16,7 @@ class Accountant:
 
 @dataclass
 class Task:
+    """任务"""
     id: str
     customer_id: str
     industry: str
@@ -42,7 +44,7 @@ class TaskDispatcher:
         
         return assignments
     
-    def _find_best_match(self, task: Task, accountants: List[Accountant]) -> tuple:
+    def _find_best_match(self, task: Task, accountants: List[Accountant]) -> Tuple[Optional[Accountant], float, str]:
         """找最佳匹配"""
         scores = []
         
@@ -58,30 +60,30 @@ class TaskDispatcher:
         
         return None, 0, "No suitable accountant"
     
-    def _calculate_score(self, task: Task, acc: Accountant) -> tuple:
+    def _calculate_score(self, task: Task, acc: Accountant) -> Tuple[float, List[str]]:
         """计算匹配分数"""
         score = 0.0
         reasons = []
         
-        # 负荷均衡 (40%)
-        load_rate = (acc.current_pending + acc.today_completed) / acc.max_capacity
-        available_rate = 1 - load_rate
+        # 1. 负荷均衡 (40%)
+        load_rate = (acc.current_pending + acc.today_completed) / max(acc.max_capacity, 1)
+        available_rate = 1 - min(load_rate, 1)
         score += available_rate * 40
         
         if available_rate > 0.5:
             reasons.append(f"负荷较低({available_rate:.0%})")
         
-        # 行业匹配 (30%)
+        # 2. 行业匹配 (30%)
         if task.industry in acc.expertise:
             score += 30
             reasons.append(f"行业匹配({task.industry})")
         
-        # 客户熟悉度 (20%)
+        # 3. 客户熟悉度 (20%)
         if task.customer_id in acc.familiar_customers:
             score += 20
             reasons.append("客户熟悉")
         
-        # 优先级加成 (10%)
+        # 4. 优先级加成 (10%)
         if task.priority >= 3:
             score += 10
             reasons.append("高优先级")
