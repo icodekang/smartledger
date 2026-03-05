@@ -37,6 +37,49 @@ app.add_middleware(
 # 注册请求日志中间件
 app.middleware("http")(log_requests)
 
+# 注册API限流中间件（所有请求）
+@app.middleware("http")
+async def rate_limit_middleware(request, call_next):
+    from app.core.rate_limit import rate_limiter
+    
+    # 获取客户端IP
+    client_ip = request.client.host if request.client else "unknown"
+    
+    # 根据路径设置不同的限流策略
+    path = request.url.path
+    
+    # 认证接口限流：5次/分钟
+    if path.startswith("/api/v1/auth"):
+        limit, window = 5, 60
+    # 上传接口限流：20次/分钟
+    elif "/upload" in path:
+        limit, window = 20, 60
+    # 其他API接口：100次/分钟
+    else:
+        limit, window = 100, 60
+    
+    # 生成限流key
+    key = f"api:{client_ip}:{path}"
+    allowed, remaining = rate_limiter.is_allowed(key, limit, window)
+    
+    if not allowed:
+        from fastapi.responses import JSONResponse
+        return JSONResponse(
+            status_code=429,
+            content={"code": 429, "message": "请求过于频繁，请稍后再试"},
+            headers={
+                "X-RateLimit-Limit": str(limit),
+                "X-RateLimit-Window": str(window)
+            }
+        )
+    
+    response = await call_next(request)
+    response.headers["X-RateLimit-Limit"] = str(limit)
+    response.headers["X-RateLimit-Remaining"] = str(remaining)
+    response.headers["X-RateLimit-Window"] = str(window)
+    
+    return response
+
 # 注册异常处理器
 register_exception_handlers(app)
 
