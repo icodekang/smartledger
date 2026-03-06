@@ -29,5 +29,8 @@ class Bill(BaseModel):
     ai_confidence = Column(Numeric(3, 2))
     ai_anomalies = Column(JSON)
     
+    # 关联生成的凭证
+    voucher_id = Column(ForeignKey("vouchers.id"), nullable=True)
+    
     # 关系
     customer = relationship("Customer", back_populates="bills")

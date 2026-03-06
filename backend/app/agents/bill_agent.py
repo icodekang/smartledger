@@ -80,6 +80,64 @@ class BillAgent:
             needs_review=needs_review
         )
     
+    async def process_bill_image(self, file_bytes: bytes, content_type: str) -> Optional[dict]:
+        """处理票据图片/PDF并返回OCR结果 - 支持PDF电子发票"""
+        self.ocr_service = OCRService()
+        
+        # 确定文件扩展名
+        if "pdf" in content_type.lower():
+            suffix = ".pdf"
+            is_pdf = True
+        elif "jpeg" in content_type.lower() or "jpg" in content_type.lower():
+            suffix = ".jpg"
+            is_pdf = False
+        elif "png" in content_type.lower():
+            suffix = ".png"
+            is_pdf = False
+        else:
+            suffix = ".tmp"
+            is_pdf = False
+        
+        try:
+            if is_pdf:
+                # PDF电子发票处理
+                ocr_result = await self.ocr_service.recognize_vat_invoice_from_bytes(
+                    file_bytes, f"invoice{suffix}"
+                )
+            else:
+                # 图片处理
+                import tempfile
+                import os
+                
+                with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                    tmp.write(file_bytes)
+                    tmp_path = tmp.name
+                
+                try:
+                    ocr_result = await self.ocr_service.recognize_vat_invoice(tmp_path)
+                finally:
+                    os.unlink(tmp_path)
+            
+            if ocr_result:
+                # 使用LLM增强
+                enhanced = await self.enhance_understanding(ocr_result)
+                return {
+                    "invoice_code": enhanced.get("invoice_code"),
+                    "invoice_number": enhanced.get("invoice_number"),
+                    "invoice_date": enhanced.get("invoice_date"),
+                    "seller_name": enhanced.get("seller_name"),
+                    "amount": enhanced.get("amount"),
+                    "tax_amount": enhanced.get("tax_amount"),
+                    "total_amount": enhanced.get("total_amount"),
+                    "confidence": enhanced.get("confidence", 0.9),
+                    "is_pdf": is_pdf  # 标记是否为PDF电子发票
+                }
+            return None
+            
+        except Exception as e:
+            logger.error(f"Process bill error: {e}")
+            return None
+    
     async def enhance_understanding(self, ocr_result: dict) -> dict:
         """增强理解"""
         from app.agents.prompts.bill_prompts import (
