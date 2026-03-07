@@ -275,3 +275,137 @@ async def audit_voucher(
         "auditor": current_user.username,
         "audited_at": voucher.audited_at.isoformat() if voucher.audited_at else None
     })
+
+
+@router.get("/{voucher_id}/detail")
+async def get_voucher_detail(
+    voucher_id: str,
+    current_user=Depends(require_permission("vouchers:read")),
+    db: Session = Depends(get_db)
+):
+    """获取凭证详情（含分录明细和合计）"""
+    voucher = voucher_repo.get(db, voucher_id)
+    if not voucher:
+        return error_response(404, "凭证不存在")
+    
+    if str(voucher.customer_id) != str(current_user.customer_id) and current_user.role != "admin":
+        return error_response(403, "无权访问此凭证")
+    
+    # 构建明细项
+    items = []
+    total_debit = 0
+    total_credit = 0
+    
+    for item in voucher.items:
+        debit = float(item.debit_amount) if item.debit_amount else 0
+        credit = float(item.credit_amount) if item.credit_amount else 0
+        total_debit += debit
+        total_credit += credit
+        
+        items.append({
+            "id": str(item.id),
+            "line_no": item.line_no,
+            "subject_code": item.subject_code,
+            "subject_name": item.subject_name,
+            "summary": item.summary,
+            "debit_amount": debit,
+            "credit_amount": credit
+        })
+    
+    return success_response(data={
+        "id": str(voucher.id),
+        "voucher_no": voucher.voucher_no,
+        "voucher_date": voucher.voucher_date.isoformat() if voucher.voucher_date else None,
+        "period": voucher.period,
+        "summary": voucher.summary,
+        "status": voucher.status,
+        "ai_confidence": float(voucher.ai_confidence) if voucher.ai_confidence else None,
+        "items": items,
+        "totals": {
+            "debit": total_debit,
+            "credit": total_credit,
+            "is_balanced": abs(total_debit - total_credit) < 0.01
+        },
+        "created_at": voucher.created_at.isoformat() if voucher.created_at else ""
+    })
+
+
+class UpdateVoucherRequest(BaseModel):
+    """更新凭证请求"""
+    voucher_date: Optional[str] = None
+    summary: Optional[str] = None
+    items: Optional[List[dict]] = None
+
+
+@router.put("/{voucher_id}")
+async def update_voucher(
+    voucher_id: str,
+    request: UpdateVoucherRequest,
+    current_user=Depends(require_permission("vouchers:update")),
+    db: Session = Depends(get_db)
+):
+    """更新凭证（仅草稿状态可编辑）"""
+    from decimal import Decimal
+    
+    voucher = voucher_repo.get(db, voucher_id)
+    if not voucher:
+        return error_response(404, "凭证不存在")
+    
+    if str(voucher.customer_id) != str(current_user.customer_id) and current_user.role != "admin":
+        return error_response(403, "无权更新此凭证")
+    
+    # 仅草稿状态可编辑
+    if voucher.status != "draft":
+        return error_response(400, "仅草稿状态的凭证可编辑")
+    
+    # 更新基本信息
+    update_data = {}
+    if request.voucher_date:
+        from datetime import datetime as dt
+        update_data["voucher_date"] = dt.strptime(request.voucher_date, "%Y-%m-%d").date()
+    if request.summary is not None:
+        update_data["summary"] = request.summary
+    
+    if update_data:
+        voucher_repo.update(db, db_obj=voucher, obj_in=update_data)
+    
+    # 更新分录
+    if request.items is not None:
+        # 校验借贷平衡
+        total_debit = sum(Decimal(str(item.get("debit_amount", 0))) for item in request.items)
+        total_credit = sum(Decimal(str(item.get("credit_amount", 0))) for item in request.items)
+        
+        if abs(total_debit - total_credit) > Decimal("0.01"):
+            return error_response(400, f"借贷不平衡：借方{total_debit} ≠ 贷方{total_credit}")
+        
+        if len(request.items) < 2:
+            return error_response(400, "凭证至少需要两条分录")
+        
+        # 删除旧分录
+        db.query(VoucherItem).filter(VoucherItem.voucher_id == voucher_id).delete()
+        
+        # 创建新分录
+        for idx, item_data in enumerate(request.items):
+            # 校验单条分录
+            debit = Decimal(str(item_data.get("debit_amount", 0)))
+            credit = Decimal(str(item_data.get("credit_amount", 0)))
+            
+            if debit > 0 and credit > 0:
+                return error_response(400, f"第{idx+1}行：借贷方不能同时有金额")
+            
+            if debit == 0 and credit == 0:
+                return error_response(400, f"第{idx+1}行：借贷方必须输入一个金额")
+            
+            item = VoucherItem(
+                voucher_id=voucher_id,
+                line_no=idx + 1,
+                subject_code=item_data.get("subject_code", ""),
+                subject_name=item_data.get("subject_name", ""),
+                summary=item_data.get("summary", ""),
+                debit_amount=debit,
+                credit_amount=credit
+            )
+            db.add(item)
+    
+    db.commit()
+    return success_response(data={"message": "凭证更新成功"})
