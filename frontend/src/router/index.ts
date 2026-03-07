@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from './stores/auth'
+import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -7,28 +7,28 @@ const router = createRouter({
     {
       path: '/login',
       name: 'Login',
-      component: () => import('./views/auth/Login.vue'),
+      component: () => import('@/views/auth/Login.vue'),
       meta: { public: true }
     },
     {
       path: '/',
-      component: () => import('./components/Layout.vue'),
+      component: () => import('@/components/Layout.vue'),
       redirect: '/bills',
       children: [
         {
           path: 'bills',
           name: 'Bills',
-          component: () => import('./views/bills/List.vue')
+          component: () => import('@/views/bills/List.vue')
         },
         {
           path: 'vouchers',
           name: 'Vouchers',
-          component: () => import('./views/vouchers/List.vue')
+          component: () => import('@/views/vouchers/List.vue')
         },
         {
           path: 'audit',
           name: 'Audit',
-          component: () => import('./views/audit/Workbench.vue')
+          component: () => import('@/views/audit/Workbench.vue')
         }
       ]
     }
