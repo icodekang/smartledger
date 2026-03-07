@@ -28,6 +28,11 @@
           <span>凭证管理</span>
         </el-menu-item>
         
+        <el-menu-item index="/bank-flows">
+          <el-icon><Money /></el-icon>
+          <span>银行流水</span>
+        </el-menu-item>
+
         <el-menu-item index="/audit">
           <el-icon><Checked /></el-icon>
           <span>审核工作台</span>

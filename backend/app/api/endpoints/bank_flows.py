@@ -13,7 +13,9 @@ from app.core.database import get_db
 from app.core.response import success_response, error_response
 from app.core.permissions import require_permission
 from app.models.bank_flow import BankFlow
+from app.models.bill import Bill
 from app.repositories.base import BaseRepository
+from app.services.matching_service import FlowBillMatcher
 
 router = APIRouter(prefix="/bank-flows", tags=["银行流水"])
 bank_flow_repo = BaseRepository(BankFlow)
@@ -435,3 +437,29 @@ async def delete_bank_flow(
     db.commit()
     
     return success_response(data={"message": "银行流水已删除"})
+
+
+@router.post("/batch-delete")
+async def batch_delete_bank_flows(
+    request: dict,
+    current_user=Depends(require_permission("bank_flows:delete")),
+    db: Session = Depends(get_db)
+):
+    """批量删除银行流水（软删除）"""
+    ids = request.get("ids", [])
+    if not ids:
+        return error_response(400, "未选择要删除的记录")
+    
+    deleted_count = 0
+    for flow_id in ids:
+        flow = bank_flow_repo.get(db, flow_id)
+        if flow and (str(flow.customer_id) == str(current_user.customer_id) or current_user.role == "admin"):
+            flow.status = "deleted"
+            deleted_count += 1
+    
+    db.commit()
+    
+    return success_response(data={
+        "message": f"成功删除 {deleted_count} 条银行流水",
+        "deleted_count": deleted_count
+    })
