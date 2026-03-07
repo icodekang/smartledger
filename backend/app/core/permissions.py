@@ -13,6 +13,7 @@ class Role(Enum):
     ADMIN = "admin"
     ACCOUNTANT = "accountant"
     VIEWER = "viewer"
+    CUSTOMER = "customer"  # 客户角色
 
 
 # 权限映射
@@ -21,9 +22,13 @@ PERMISSIONS = {
     Role.ACCOUNTANT: [
         "bills:read", "bills:create", "bills:update",
         "vouchers:read", "vouchers:create", "vouchers:audit",
-        "dashboard:read"
+        "dashboard:read", "audit:read", "audit:approve"
     ],
-    Role.VIEWER: ["bills:read", "vouchers:read", "dashboard:read"]
+    Role.VIEWER: ["bills:read", "vouchers:read", "dashboard:read"],
+    Role.CUSTOMER: [
+        "bills:read", "bills:create", "bills:update",
+        "vouchers:read", "dashboard:read", "audit:read"
+    ]
 }
 
 
