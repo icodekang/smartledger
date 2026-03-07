@@ -61,6 +61,11 @@ async def login(
         return success_response(data=result.dict())
     except AuthenticationException as e:
         return error_response(401, e.message)
+    except Exception as e:
+        import traceback
+        print(f"Login error: {str(e)}")
+        print(traceback.format_exc())
+        return error_response(500, f"Internal server error: {str(e)}")
 
 
 @router.post("/register")
