@@ -19,3 +19,4 @@ class Customer(BaseModel):
     # 关系
     bills = relationship("Bill", back_populates="customer")
     vouchers = relationship("Voucher", back_populates="customer")
+    bank_flows = relationship("BankFlow", back_populates="customer")

@@ -34,3 +34,4 @@ class Bill(BaseModel):
     
     # 关系
     customer = relationship("Customer", back_populates="bills")
+    bank_flow_matches = relationship("BankFlow", back_populates="matched_bill")
