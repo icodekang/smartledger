@@ -56,12 +56,12 @@ class VoucherResponse(VoucherBase):
     id: str
     customer_id: Optional[str] = None
     voucher_no: Optional[str] = None
-    voucher_date: Optional[date] = None
+    voucher_date: Optional[str] = None  # 改为 str 类型，匹配 isoformat 返回值
     period: Optional[str] = None
     summary: Optional[str] = None
     ai_confidence: Optional[float] = None
     ai_reason: Optional[str] = None
-    status: str
+    status: Optional[str] = None  # 改为可选
     assigned_to: Optional[str] = None
     auditor_id: Optional[str] = None
     audited_at: Optional[str] = None

@@ -43,11 +43,12 @@ class BillResponse(BillBase):
     """票据响应模型"""
     id: str
     customer_id: Optional[str] = None
+    invoice_date: Optional[str] = None  # 改为 str 类型，匹配 isoformat 返回值
     storage_path: Optional[str] = None
     storage_url: Optional[str] = None
     ocr_result: Optional[dict] = None
     ocr_confidence: Optional[float] = None
-    process_status: str
+    process_status: Optional[str] = None  # 改为可选
     ai_confidence: Optional[float] = None
     ai_anomalies: Optional[List[dict]] = None
     created_at: str

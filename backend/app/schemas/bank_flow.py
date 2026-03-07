@@ -37,7 +37,8 @@ class BankFlowResponse(BankFlowBase):
     """银行流水响应模型"""
     id: str
     customer_id: Optional[str] = None
-    is_matched: bool
+    transaction_date: Optional[str] = None  # 改为 str 类型，匹配 isoformat 返回值
+    is_matched: Optional[bool] = False  # 改为可选，默认 False
     matched_bill_id: Optional[str] = None
     created_at: str
     updated_at: str
