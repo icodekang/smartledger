@@ -59,9 +59,10 @@
           </template>
         </el-table-column>
         
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="240" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link @click="viewDetail(row)">查看</el-button>
+            <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
+            <el-button type="info" link @click="viewDetail(row)">查看</el-button>
             <el-button 
               type="success" 
               link 
@@ -116,7 +117,14 @@
       </template>
     </el-dialog>
     
-    <!-- 详情对话框 -->
+    <!-- 详情编辑对话框 -->
+    <BillDetailDialog
+      v-model="showEditDialog"
+      :bill-id="currentBillId"
+      @success="handleEditSuccess"
+    />
+    
+    <!-- 详情查看对话框 -->
     <el-dialog v-model="showDetailDialog" title="票据详情" width="600px">
       <el-descriptions :column="2" border v-if="currentBill">
         <el-descriptions-item label="发票代码">{{ currentBill.invoice_code }}</el-descriptions-item>
@@ -141,12 +149,15 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { billApi, type Bill } from '../../api/bill'
 import { voucherApi } from '../../api/voucher'
+import BillDetailDialog from './components/BillDetailDialog.vue'
 
 const loading = ref(false)
 const tableData = ref<Bill[]>([])
 const showUploadDialog = ref(false)
 const showDetailDialog = ref(false)
+const showEditDialog = ref(false)
 const currentBill = ref<Bill | null>(null)
+const currentBillId = ref<string>('')
 const uploading = ref(false)
 const uploadFile = ref<File | null>(null)
 
@@ -207,6 +218,17 @@ const getStatusText = (status?: string) => {
     voucher_generated: '已生成凭证'
   }
   return map[status || ''] || status
+}
+
+// 编辑票据
+const handleEdit = (row: Bill) => {
+  currentBillId.value = row.id
+  showEditDialog.value = true
+}
+
+// 编辑成功
+const handleEditSuccess = () => {
+  fetchData()
 }
 
 const viewDetail = (row: Bill) => {

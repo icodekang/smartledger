@@ -2,11 +2,12 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from decimal import Decimal
 
 from app.core.database import get_db
 from app.core.response import success_response, error_response, ResponseModel, ListData
 from app.core.permissions import require_permission
-from app.models.bill import Bill
+from app.models.bill import Bill, BillItem
 from app.repositories.bill import BillRepository
 from app.schemas.bill import (
     BillCreate, BillUpdate, BillResponse, BillUploadResponse
@@ -16,6 +17,38 @@ from app.agents.bill_agent import BillAgent
 
 router = APIRouter(prefix="/invoices", tags=["票据管理"])
 bill_repo = BillRepository()
+
+
+class BillItemData(BaseModel):
+    """票据明细项数据"""
+    id: Optional[str] = None
+    name: str
+    spec: Optional[str] = None
+    unit: Optional[str] = None
+    quantity: Optional[float] = None
+    unit_price: Optional[float] = None
+    amount: Optional[float] = None
+    tax_rate: Optional[str] = None
+    tax_amount: Optional[float] = None
+
+
+class BillDetailData(BaseModel):
+    """票据详情数据"""
+    invoice_code: Optional[str] = None
+    invoice_number: Optional[str] = None
+    invoice_date: Optional[str] = None
+    invoice_type: Optional[str] = None
+    amount: Optional[float] = None
+    tax_amount: Optional[float] = None
+    total_amount: Optional[float] = None
+    seller_name: Optional[str] = None
+    seller_tax_no: Optional[str] = None
+    seller_address: Optional[str] = None
+    seller_bank: Optional[str] = None
+    buyer_name: Optional[str] = None
+    buyer_tax_no: Optional[str] = None
+    buyer_address: Optional[str] = None
+    buyer_bank: Optional[str] = None
 
 
 class BillListData(BaseModel):
@@ -308,3 +341,130 @@ async def upload_invoice(
         "ocr_status": "completed" if bill.process_status == "ocr_completed" else "pending",
         "message": "上传成功"
     })
+
+
+@router.get("/{invoice_id}/detail")
+async def get_invoice_detail(
+    invoice_id: str,
+    current_user=Depends(require_permission("bills:read")),
+    db: Session = Depends(get_db)
+):
+    """获取票据详情（含明细项和OCR结果）"""
+    bill = bill_repo.get(db, invoice_id)
+    if not bill:
+        return error_response(404, "票据不存在")
+    
+    if str(bill.customer_id) != str(current_user.customer_id) and current_user.role != "admin":
+        return error_response(403, "无权访问此票据")
+    
+    # 构建明细项
+    items = []
+    for item in bill.items:
+        items.append({
+            "id": str(item.id),
+            "name": item.name,
+            "spec": item.spec,
+            "unit": item.unit,
+            "quantity": float(item.quantity) if item.quantity else None,
+            "unit_price": float(item.unit_price) if item.unit_price else None,
+            "amount": float(item.amount) if item.amount else None,
+            "tax_rate": item.tax_rate,
+            "tax_amount": float(item.tax_amount) if item.tax_amount else None
+        })
+    
+    return success_response(data={
+        "id": str(bill.id),
+        "invoice_code": bill.invoice_code,
+        "invoice_number": bill.invoice_number,
+        "invoice_date": bill.invoice_date.isoformat() if bill.invoice_date else None,
+        "invoice_type": bill.bill_type,
+        "amount": float(bill.amount) if bill.amount else None,
+        "tax_amount": float(bill.tax_amount) if bill.tax_amount else None,
+        "total_amount": float(bill.total_amount) if bill.total_amount else None,
+        "seller_name": bill.seller_name,
+        "seller_tax_no": bill.seller_tax_no,
+        "seller_address": bill.seller_address,
+        "seller_bank": bill.seller_bank,
+        "buyer_name": bill.buyer_name,
+        "buyer_tax_no": bill.buyer_tax_no,
+        "buyer_address": bill.buyer_address,
+        "buyer_bank": bill.buyer_bank,
+        "items": items,
+        "image_url": bill.storage_url,
+        "ocr_result": bill.ocr_result,
+        "process_status": bill.process_status,
+        "created_at": bill.created_at.isoformat() if bill.created_at else ""
+    })
+
+
+@router.put("/{invoice_id}")
+async def update_invoice(
+    invoice_id: str,
+    request: BillDetailData,
+    current_user=Depends(require_permission("bills:update")),
+    db: Session = Depends(get_db)
+):
+    """更新票据基本信息"""
+    bill = bill_repo.get(db, invoice_id)
+    if not bill:
+        return error_response(404, "票据不存在")
+    
+    if str(bill.customer_id) != str(current_user.customer_id) and current_user.role != "admin":
+        return error_response(403, "无权更新此票据")
+    
+    # 构建更新数据
+    update_data = {k: v for k, v in request.dict().items() if v is not None}
+    
+    # 转换日期字符串为date对象
+    if "invoice_date" in update_data and update_data["invoice_date"]:
+        from datetime import datetime as dt
+        update_data["invoice_date"] = dt.strptime(update_data["invoice_date"], "%Y-%m-%d").date()
+    
+    # 转换金额为Decimal
+    for field in ["amount", "tax_amount", "total_amount"]:
+        if field in update_data and update_data[field] is not None:
+            update_data[field] = Decimal(str(update_data[field]))
+    
+    bill_repo.update(db, db_obj=bill, obj_in=update_data)
+    
+    return success_response(data={"message": "票据更新成功"})
+
+
+@router.put("/{invoice_id}/items")
+async def update_invoice_items(
+    invoice_id: str,
+    request: dict,
+    current_user=Depends(require_permission("bills:update")),
+    db: Session = Depends(get_db)
+):
+    """更新票据明细项"""
+    bill = bill_repo.get(db, invoice_id)
+    if not bill:
+        return error_response(404, "票据不存在")
+    
+    if str(bill.customer_id) != str(current_user.customer_id) and current_user.role != "admin":
+        return error_response(403, "无权更新此票据")
+    
+    items_data = request.get("items", [])
+    
+    # 删除现有明细
+    db.query(BillItem).filter(BillItem.bill_id == invoice_id).delete()
+    
+    # 创建新明细
+    for item_data in items_data:
+        item = BillItem(
+            bill_id=invoice_id,
+            name=item_data.get("name", ""),
+            spec=item_data.get("spec"),
+            unit=item_data.get("unit"),
+            quantity=Decimal(str(item_data.get("quantity", 0))) if item_data.get("quantity") else None,
+            unit_price=Decimal(str(item_data.get("unit_price", 0))) if item_data.get("unit_price") else None,
+            amount=Decimal(str(item_data.get("amount", 0))) if item_data.get("amount") else None,
+            tax_rate=item_data.get("tax_rate"),
+            tax_amount=Decimal(str(item_data.get("tax_amount", 0))) if item_data.get("tax_amount") else None
+        )
+        db.add(item)
+    
+    db.commit()
+    
+    return success_response(data={"message": "明细项更新成功"})
