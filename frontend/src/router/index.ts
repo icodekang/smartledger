@@ -13,8 +13,13 @@ const router = createRouter({
     {
       path: '/',
       component: () => import('@/components/Layout.vue'),
-      redirect: '/bills',
+      redirect: '/dashboard',
       children: [
+        {
+          path: 'dashboard',
+          name: 'Dashboard',
+          component: () => import('@/views/dashboard/index.vue')
+        },
         {
           path: 'bills',
           name: 'Bills',
