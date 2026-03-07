@@ -58,17 +58,10 @@ services:
   web:
     build: ./frontend
     depends_on:
-      - app
-    ports:
-      - "8080:80"
-
-  web:
-    build: ./frontend
-    depends_on:
       app:
         condition: service_started
     ports:
-      - "80:80"
+      - "8080:80"
     container_name: smartledger-web
 
 volumes:
