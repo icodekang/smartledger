@@ -93,7 +93,7 @@ class RateLimitMiddleware:
             })
             await send({
                 "type": "http.response.body",
-                "body": b'{"code":429,"message":"请求过于频繁，请稍后再试"}',
+                "body": '{"code":429,"message":"Rate limited"}'.encode(),
             })
             return
         
