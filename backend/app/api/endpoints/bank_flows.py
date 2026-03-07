@@ -3,22 +3,37 @@ from fastapi import APIRouter, Depends, Query, UploadFile, File
 from sqlalchemy.orm import Session
 import pandas as pd
 from io import BytesIO
+from pydantic import BaseModel
 
 from app.core.database import get_db
-from app.core.response import success_response, error_response
+from app.core.response import success_response, error_response, ResponseModel
 from app.core.permissions import require_permission
 from app.models.bank_flow import BankFlow
 from app.repositories.base import BaseRepository
 from app.schemas.bank_flow import (
     BankFlowCreate, BankFlowUpdate, BankFlowResponse,
-    BankFlowListResponse, BankFlowUploadResponse
+    BankFlowUploadResponse
 )
 
 router = APIRouter(prefix="/bank-flows", tags=["银行流水"])
 bank_flow_repo = BaseRepository(BankFlow)
 
 
-@router.get("")
+class BankFlowListData(BaseModel):
+    """银行流水列表数据"""
+    items: List[BankFlowResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+class MessageResponse(BaseModel):
+    """消息响应"""
+    message: str
+
+
+@router.get("", response_model=ResponseModel[BankFlowListData])
 async def list_bank_flows(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
@@ -62,7 +77,7 @@ async def list_bank_flows(
         items.append(item)
     
     return success_response(data={
-        "items": [item.dict() for item in items],
+        "items": items,
         "total": total,
         "page": page,
         "page_size": page_size,
@@ -70,7 +85,7 @@ async def list_bank_flows(
     })
 
 
-@router.get("/{flow_id}")
+@router.get("/{flow_id}", response_model=ResponseModel[BankFlowResponse])
 async def get_bank_flow(
     flow_id: str,
     current_user=Depends(require_permission("bank_flows:read")),
@@ -97,10 +112,10 @@ async def get_bank_flow(
         matched_bill_id=str(flow.matched_bill_id) if flow.matched_bill_id else None,
         created_at=flow.created_at.isoformat() if flow.created_at else "",
         updated_at=flow.updated_at.isoformat() if flow.updated_at else ""
-    ).dict())
+    ))
 
 
-@router.post("")
+@router.post("", response_model=ResponseModel[BankFlowResponse])
 async def create_bank_flow(
     request: BankFlowCreate,
     current_user=Depends(require_permission("bank_flows:create")),
@@ -126,10 +141,10 @@ async def create_bank_flow(
         matched_bill_id=str(flow.matched_bill_id) if flow.matched_bill_id else None,
         created_at=flow.created_at.isoformat() if flow.created_at else "",
         updated_at=flow.updated_at.isoformat() if flow.updated_at else ""
-    ).dict())
+    ))
 
 
-@router.put("/{flow_id}")
+@router.put("/{flow_id}", response_model=ResponseModel[BankFlowResponse])
 async def update_bank_flow(
     flow_id: str,
     request: BankFlowUpdate,
@@ -160,10 +175,10 @@ async def update_bank_flow(
         matched_bill_id=str(flow.matched_bill_id) if flow.matched_bill_id else None,
         created_at=flow.created_at.isoformat() if flow.created_at else "",
         updated_at=flow.updated_at.isoformat() if flow.updated_at else ""
-    ).dict())
+    ))
 
 
-@router.delete("/{flow_id}")
+@router.delete("/{flow_id}", response_model=ResponseModel[MessageResponse])
 async def delete_bank_flow(
     flow_id: str,
     current_user=Depends(require_permission("bank_flows:delete")),
@@ -181,7 +196,7 @@ async def delete_bank_flow(
     return success_response(data={"message": "银行流水已删除"})
 
 
-@router.post("/upload")
+@router.post("/upload", response_model=ResponseModel[BankFlowUploadResponse])
 async def upload_bank_flows(
     file: UploadFile = File(..., description="银行流水Excel/CSV文件"),
     current_user=Depends(require_permission("bank_flows:create")),

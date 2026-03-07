@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.core.database import get_db
-from app.core.response import success_response, error_response
+from app.core.response import success_response, error_response, ResponseModel
 from app.core.permissions import require_permission
 from app.models.voucher import Voucher
 from app.models.user import User
@@ -19,18 +19,18 @@ voucher_repo = BaseRepository(Voucher)
 class AuditTaskItem(BaseModel):
     """审核任务项"""
     voucher_id: str
-    voucher_no: Optional[str]
-    voucher_date: Optional[str]
-    summary: Optional[str]
+    voucher_no: Optional[str] = None
+    voucher_date: Optional[str] = None
+    summary: Optional[str] = None
     total_amount: float
     status: str
     created_at: str
     submitter: str
-    customer_name: Optional[str]
+    customer_name: Optional[str] = None
 
 
-class AuditTaskListResponse(BaseModel):
-    """审核任务列表响应"""
+class AuditTaskListData(BaseModel):
+    """审核任务列表数据"""
     items: List[AuditTaskItem]
     total: int
     page: int
@@ -46,13 +46,43 @@ class BatchAuditRequest(BaseModel):
     note: Optional[str] = None
 
 
+class BatchAuditData(BaseModel):
+    """批量审核响应数据"""
+    updated_count: int
+    failed_count: int
+    failed_items: List[dict]
+    action: str
+
+
 class AuditAssignmentRequest(BaseModel):
     """审核分配请求"""
     voucher_ids: List[str]
     auditor_id: str
 
 
-@router.get("/pending")
+class AssignmentData(BaseModel):
+    """分配响应数据"""
+    assigned_count: int
+    auditor_id: str
+    auditor_name: str
+    failed_count: int
+    failed_items: List[dict]
+
+
+class AutoAssignData(BaseModel):
+    """自动分配响应数据"""
+    assigned_count: int
+    auditor_id: str
+    message: str
+
+
+class AuditStatisticsData(BaseModel):
+    """审核统计数据"""
+    overview: dict
+    performance: dict
+
+
+@router.get("/pending", response_model=ResponseModel[AuditTaskListData])
 async def get_pending_tasks(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
@@ -123,7 +153,7 @@ async def get_pending_tasks(
     my_assigned = stats_query.filter(Voucher.assigned_to == current_user.id).count()
     
     return success_response(data={
-        "items": [item.dict() for item in items],
+        "items": items,
         "total": total,
         "page": page,
         "page_size": page_size,
@@ -136,7 +166,7 @@ async def get_pending_tasks(
     })
 
 
-@router.post("/batch-audit")
+@router.post("/batch-audit", response_model=ResponseModel[BatchAuditData])
 async def batch_audit(
     request: BatchAuditRequest,
     current_user=Depends(require_permission("audit:approve")),
@@ -188,7 +218,7 @@ async def batch_audit(
     })
 
 
-@router.post("/assign")
+@router.post("/assign", response_model=ResponseModel[AssignmentData])
 async def assign_tasks(
     request: AuditAssignmentRequest,
     current_user=Depends(require_permission("audit:assign")),
@@ -229,7 +259,7 @@ async def assign_tasks(
     })
 
 
-@router.post("/auto-assign")
+@router.post("/auto-assign", response_model=ResponseModel[AutoAssignData])
 async def auto_assign_tasks(
     count: int = Query(10, ge=1, le=100, description="分配数量"),
     current_user=Depends(require_permission("audit:assign")),
@@ -258,7 +288,7 @@ async def auto_assign_tasks(
     })
 
 
-@router.get("/statistics")
+@router.get("/statistics", response_model=ResponseModel[AuditStatisticsData])
 async def get_audit_statistics(
     current_user=Depends(require_permission("audit:read")),
     db: Session = Depends(get_db)

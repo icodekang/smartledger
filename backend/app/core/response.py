@@ -1,9 +1,18 @@
-from typing import Any, Optional, Generic, TypeVar
+from typing import Any, Optional, Generic, TypeVar, List
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 import time
 
 T = TypeVar('T')
+
+
+class ListData(BaseModel, Generic[T]):
+    """列表数据通用模型"""
+    items: List[T]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
 
 
 class ResponseModel(BaseModel, Generic[T]):

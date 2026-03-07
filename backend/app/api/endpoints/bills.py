@@ -1,15 +1,15 @@
 from typing import Optional, List
 from fastapi import APIRouter, Depends, Query, UploadFile, File
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from app.core.database import get_db
-from app.core.response import success_response, error_response
+from app.core.response import success_response, error_response, ResponseModel, ListData
 from app.core.permissions import require_permission
 from app.models.bill import Bill
 from app.repositories.bill import BillRepository
 from app.schemas.bill import (
-    BillCreate, BillUpdate, BillResponse, 
-    BillListResponse, BillUploadResponse
+    BillCreate, BillUpdate, BillResponse, BillUploadResponse
 )
 from app.services.storage_service import StorageService
 from app.agents.bill_agent import BillAgent
@@ -18,7 +18,29 @@ router = APIRouter(prefix="/invoices", tags=["票据管理"])
 bill_repo = BillRepository()
 
 
-@router.get("")
+class BillListData(BaseModel):
+    """票据列表数据"""
+    items: List[BillResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+class MessageResponse(BaseModel):
+    """消息响应"""
+    message: str
+
+
+class BillUploadData(BaseModel):
+    """票据上传响应数据"""
+    bill_id: str
+    storage_url: str
+    ocr_status: str
+    message: str
+
+
+@router.get("", response_model=ResponseModel[BillListData])
 async def list_invoices(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
@@ -70,7 +92,7 @@ async def list_invoices(
         items.append(item)
     
     return success_response(data={
-        "items": [item.dict() for item in items],
+        "items": items,
         "total": total,
         "page": page,
         "page_size": page_size,
@@ -78,7 +100,7 @@ async def list_invoices(
     })
 
 
-@router.get("/{invoice_id}")
+@router.get("/{invoice_id}", response_model=ResponseModel[BillResponse])
 async def get_invoice(
     invoice_id: str,
     current_user=Depends(require_permission("invoices:read")),
@@ -113,10 +135,10 @@ async def get_invoice(
         ai_anomalies=bill.ai_anomalies,
         created_at=bill.created_at.isoformat() if bill.created_at else "",
         updated_at=bill.updated_at.isoformat() if bill.updated_at else ""
-    ).dict())
+    ))
 
 
-@router.post("")
+@router.post("", response_model=ResponseModel[BillResponse])
 async def create_invoice(
     request: BillCreate,
     current_user=Depends(require_permission("invoices:create")),
@@ -149,10 +171,10 @@ async def create_invoice(
         ai_anomalies=bill.ai_anomalies,
         created_at=bill.created_at.isoformat() if bill.created_at else "",
         updated_at=bill.updated_at.isoformat() if bill.updated_at else ""
-    ).dict())
+    ))
 
 
-@router.put("/{invoice_id}")
+@router.put("/{invoice_id}", response_model=ResponseModel[BillResponse])
 async def update_invoice(
     invoice_id: str,
     request: BillUpdate,
@@ -191,10 +213,10 @@ async def update_invoice(
         ai_anomalies=bill.ai_anomalies,
         created_at=bill.created_at.isoformat() if bill.created_at else "",
         updated_at=bill.updated_at.isoformat() if bill.updated_at else ""
-    ).dict())
+    ))
 
 
-@router.delete("/{invoice_id}")
+@router.delete("/{invoice_id}", response_model=ResponseModel[MessageResponse])
 async def delete_invoice(
     invoice_id: str,
     current_user=Depends(require_permission("invoices:delete")),
@@ -214,7 +236,7 @@ async def delete_invoice(
     return success_response(data={"message": "票据已删除"})
 
 
-@router.post("/upload")
+@router.post("/upload", response_model=ResponseModel[BillUploadData])
 async def upload_invoice(
     file: UploadFile = File(..., description="票据图片文件"),
     bill_type: Optional[str] = Query("invoice", description="票据类型"),
