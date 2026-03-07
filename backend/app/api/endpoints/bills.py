@@ -47,7 +47,7 @@ async def list_invoices(
     bill_type: Optional[str] = Query(None, description="票据类型"),
     process_status: Optional[str] = Query(None, description="处理状态"),
     seller_name: Optional[str] = Query(None, description="销售方名称"),
-    current_user=Depends(require_permission("invoices:read")),
+    current_user=Depends(require_permission("bills:read")),
     db: Session = Depends(get_db)
 ):
     """获取票据列表"""
@@ -103,7 +103,7 @@ async def list_invoices(
 @router.get("/{invoice_id}")
 async def get_invoice(
     invoice_id: str,
-    current_user=Depends(require_permission("invoices:read")),
+    current_user=Depends(require_permission("bills:read")),
     db: Session = Depends(get_db)
 ):
     """获取票据详情"""
@@ -141,7 +141,7 @@ async def get_invoice(
 @router.post("")
 async def create_invoice(
     request: BillCreate,
-    current_user=Depends(require_permission("invoices:create")),
+    current_user=Depends(require_permission("bills:create")),
     db: Session = Depends(get_db)
 ):
     """创建票据"""
@@ -178,7 +178,7 @@ async def create_invoice(
 async def update_invoice(
     invoice_id: str,
     request: BillUpdate,
-    current_user=Depends(require_permission("invoices:update")),
+    current_user=Depends(require_permission("bills:update")),
     db: Session = Depends(get_db)
 ):
     """更新票据"""
@@ -219,7 +219,7 @@ async def update_invoice(
 @router.delete("/{invoice_id}")
 async def delete_invoice(
     invoice_id: str,
-    current_user=Depends(require_permission("invoices:delete")),
+    current_user=Depends(require_permission("bills:delete")),
     db: Session = Depends(get_db)
 ):
     """删除票据"""
@@ -240,7 +240,7 @@ async def delete_invoice(
 async def upload_invoice(
     file: UploadFile = File(..., description="票据图片文件"),
     bill_type: Optional[str] = Query("invoice", description="票据类型"),
-    current_user=Depends(require_permission("invoices:create")),
+    current_user=Depends(require_permission("bills:create")),
     db: Session = Depends(get_db)
 ):
     """上传票据文件"""
