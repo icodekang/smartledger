@@ -51,13 +51,13 @@ class AuthService:
         if existing_user:
             raise Exception("用户名已存在")
         
-        # 创建新用户
+        # 创建新用户，默认管理员角色
         user = User(
             id=uuid4(),
             username=username,
             password_hash=get_password_hash(password),
             name=name,
-            role="customer",  # 默认角色
+            role="admin",  # 默认管理员角色
             is_active=True
         )
         
