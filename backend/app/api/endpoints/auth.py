@@ -77,7 +77,13 @@ async def register(
     try:
         auth_service = AuthService()
         user = await auth_service.register(request.username, request.password, request.name, db)
-        return success_response(data=user.dict())
+        # 手动构建响应数据，User 是 SQLAlchemy 模型，没有 dict() 方法
+        return success_response(data={
+            "id": str(user.id),
+            "username": user.username,
+            "name": user.name,
+            "role": user.role
+        })
     except Exception as e:
         return error_response(400, str(e))
 
