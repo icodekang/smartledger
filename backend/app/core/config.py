@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     
     # 数据库
-    DATABASE_URL: str = "postgresql://user:pass@localhost:5432/smartledger"
+    DATABASE_URL: str = "postgresql://smartledger:smartledger123@localhost:5433/smartledger"
     
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"

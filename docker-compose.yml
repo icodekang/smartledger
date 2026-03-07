@@ -7,6 +7,7 @@ services:
       POSTGRES_DB: smartledger
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-database.sql:/docker-entrypoint-initdb.d/01-init.sql
     ports:
       - "5433:5432"
     healthcheck:
@@ -67,6 +68,15 @@ services:
     ports:
       - "8000:8000"
     container_name: smartledger-app
+
+  web:
+    build: ./frontend
+    depends_on:
+      app:
+        condition: service_started
+    ports:
+      - "80:80"
+    container_name: smartledger-web
 
 volumes:
   postgres_data:
