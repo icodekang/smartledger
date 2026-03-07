@@ -82,7 +82,7 @@ class AuditStatisticsData(BaseModel):
     performance: dict
 
 
-@router.get("/pending", response_model=ResponseModel[AuditTaskListData])
+@router.get("/pending")
 async def get_pending_tasks(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
@@ -166,7 +166,7 @@ async def get_pending_tasks(
     })
 
 
-@router.post("/batch-audit", response_model=ResponseModel[BatchAuditData])
+@router.post("/batch-audit")
 async def batch_audit(
     request: BatchAuditRequest,
     current_user=Depends(require_permission("audit:approve")),
@@ -218,7 +218,7 @@ async def batch_audit(
     })
 
 
-@router.post("/assign", response_model=ResponseModel[AssignmentData])
+@router.post("/assign")
 async def assign_tasks(
     request: AuditAssignmentRequest,
     current_user=Depends(require_permission("audit:assign")),
@@ -259,7 +259,7 @@ async def assign_tasks(
     })
 
 
-@router.post("/auto-assign", response_model=ResponseModel[AutoAssignData])
+@router.post("/auto-assign")
 async def auto_assign_tasks(
     count: int = Query(10, ge=1, le=100, description="分配数量"),
     current_user=Depends(require_permission("audit:assign")),
@@ -288,7 +288,7 @@ async def auto_assign_tasks(
     })
 
 
-@router.get("/statistics", response_model=ResponseModel[AuditStatisticsData])
+@router.get("/statistics")
 async def get_audit_statistics(
     current_user=Depends(require_permission("audit:read")),
     db: Session = Depends(get_db)

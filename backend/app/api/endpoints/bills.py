@@ -40,7 +40,7 @@ class BillUploadData(BaseModel):
     message: str
 
 
-@router.get("", response_model=ResponseModel[BillListData])
+@router.get("")
 async def list_invoices(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
@@ -100,7 +100,7 @@ async def list_invoices(
     })
 
 
-@router.get("/{invoice_id}", response_model=ResponseModel[BillResponse])
+@router.get("/{invoice_id}")
 async def get_invoice(
     invoice_id: str,
     current_user=Depends(require_permission("invoices:read")),
@@ -138,7 +138,7 @@ async def get_invoice(
     ))
 
 
-@router.post("", response_model=ResponseModel[BillResponse])
+@router.post("")
 async def create_invoice(
     request: BillCreate,
     current_user=Depends(require_permission("invoices:create")),
@@ -174,7 +174,7 @@ async def create_invoice(
     ))
 
 
-@router.put("/{invoice_id}", response_model=ResponseModel[BillResponse])
+@router.put("/{invoice_id}")
 async def update_invoice(
     invoice_id: str,
     request: BillUpdate,
@@ -216,7 +216,7 @@ async def update_invoice(
     ))
 
 
-@router.delete("/{invoice_id}", response_model=ResponseModel[MessageResponse])
+@router.delete("/{invoice_id}")
 async def delete_invoice(
     invoice_id: str,
     current_user=Depends(require_permission("invoices:delete")),
@@ -236,7 +236,7 @@ async def delete_invoice(
     return success_response(data={"message": "票据已删除"})
 
 
-@router.post("/upload", response_model=ResponseModel[BillUploadData])
+@router.post("/upload")
 async def upload_invoice(
     file: UploadFile = File(..., description="票据图片文件"),
     bill_type: Optional[str] = Query("invoice", description="票据类型"),
