@@ -27,11 +27,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     const { code, message, data } = response.data
-    if (code !== 0) {
+    // 后端返回 code: 200 表示成功
+    if (code !== 200 && code !== 0) {
       ElMessage.error(message || '请求失败')
       return Promise.reject(new Error(message))
     }
-    return data
+    return response.data  // 返回完整响应，包含 data 字段
   },
   (error) => {
     const { response } = error

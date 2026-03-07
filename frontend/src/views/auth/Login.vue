@@ -175,7 +175,9 @@ const handleLogin = async () => {
   loading.value = true
   try {
     const res = await authApi.login(loginData)
-    await authStore.login(res.access_token, res.user)
+    // 响应拦截器返回完整响应结构: { code, message, data: { access_token, user } }
+    const { access_token, user } = res.data
+    await authStore.login(access_token, user)
     ElMessage.success('登录成功')
     router.push('/')
   } catch (error) {

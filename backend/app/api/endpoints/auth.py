@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 import re
 
 from app.core.database import get_db
@@ -13,6 +14,13 @@ from app.models.user import User
 
 router = APIRouter(prefix="/auth", tags=["认证"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+
+
+class RegisterRequest(BaseModel):
+    """注册请求体"""
+    username: str
+    password: str
+    name: str
 
 
 def validate_password_strength(password: str) -> tuple[bool, str]:
@@ -57,20 +65,18 @@ async def login(
 
 @router.post("/register")
 async def register(
-    username: str,
-    password: str,
-    name: str,
+    request: RegisterRequest,
     db: Session = Depends(get_db)
 ):
     """用户注册 - 带密码强度检查"""
     # 验证密码强度
-    is_valid, error_msg = validate_password_strength(password)
+    is_valid, error_msg = validate_password_strength(request.password)
     if not is_valid:
         return error_response(400, error_msg)
     
     try:
         auth_service = AuthService()
-        user = await auth_service.register(username, password, name, db)
+        user = await auth_service.register(request.username, request.password, request.name, db)
         return success_response(data=user.dict())
     except Exception as e:
         return error_response(400, str(e))
