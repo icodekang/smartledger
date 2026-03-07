@@ -41,6 +41,9 @@ api.interceptors.response.use(
       window.location.href = '/login'
     } else if (response?.status === 429) {
       ElMessage.error('请求过于频繁，请稍后再试')
+    } else if (response?.status === 403) {
+      // 权限错误不显示弹窗，静默处理
+      console.warn('权限不足:', response?.data?.message)
     } else {
       ElMessage.error(response?.data?.message || '网络错误')
     }
