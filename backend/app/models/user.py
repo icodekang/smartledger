@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, DateTime, Integer
+from sqlalchemy import Column, String, Boolean, DateTime, Integer, ForeignKey
 
 from app.models.base import BaseModel
 
@@ -15,3 +15,4 @@ class User(BaseModel):
     max_daily_capacity = Column(Integer, default=50)
     is_active = Column(Boolean, default=True)
     last_login = Column(DateTime)
+    customer_id = Column(ForeignKey("customers.id"), nullable=True)  # 关联客户ID
