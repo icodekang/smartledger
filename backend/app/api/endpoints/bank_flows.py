@@ -18,7 +18,7 @@ router = APIRouter(prefix="/bank-flows", tags=["银行流水"])
 bank_flow_repo = BaseRepository(BankFlow)
 
 
-@router.get("", response_model=BankFlowListResponse)
+@router.get("")
 async def list_bank_flows(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
@@ -70,7 +70,7 @@ async def list_bank_flows(
     })
 
 
-@router.get("/{flow_id}", response_model=BankFlowResponse)
+@router.get("/{flow_id}")
 async def get_bank_flow(
     flow_id: str,
     current_user=Depends(require_permission("bank_flows:read")),
@@ -100,7 +100,7 @@ async def get_bank_flow(
     ).dict())
 
 
-@router.post("", response_model=BankFlowResponse)
+@router.post("")
 async def create_bank_flow(
     request: BankFlowCreate,
     current_user=Depends(require_permission("bank_flows:create")),
@@ -129,7 +129,7 @@ async def create_bank_flow(
     ).dict())
 
 
-@router.put("/{flow_id}", response_model=BankFlowResponse)
+@router.put("/{flow_id}")
 async def update_bank_flow(
     flow_id: str,
     request: BankFlowUpdate,
@@ -181,7 +181,7 @@ async def delete_bank_flow(
     return success_response(data={"message": "银行流水已删除"})
 
 
-@router.post("/upload", response_model=BankFlowUploadResponse)
+@router.post("/upload")
 async def upload_bank_flows(
     file: UploadFile = File(..., description="银行流水Excel/CSV文件"),
     current_user=Depends(require_permission("bank_flows:create")),

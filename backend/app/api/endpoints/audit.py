@@ -52,7 +52,7 @@ class AuditAssignmentRequest(BaseModel):
     auditor_id: str
 
 
-@router.get("/pending", response_model=AuditTaskListResponse)
+@router.get("/pending")
 async def get_pending_tasks(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
