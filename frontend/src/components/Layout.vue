@@ -13,7 +13,7 @@
         text-color="#bfcbd9"
         active-text-color="#409EFF"
       >
-        <el-menu-item index="/">
+        <el-menu-item index="/dashboard">
           <el-icon><HomeFilled /></el-icon>
           <span>首页</span>
         </el-menu-item>

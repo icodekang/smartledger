@@ -329,10 +329,15 @@ const fetchData = async () => {
       stats.value.billsCount = billsRes.data.total || 0
     }
 
-    // 获取凭证列表
-    const vouchersRes = await api.get('/vouchers?page_size=1')
-    if (vouchersRes.data) {
-      stats.value.vouchersCount = vouchersRes.data.total || 0
+    // 获取凭证列表（失败不影响其他数据）
+    try {
+      const vouchersRes = await api.get('/vouchers?page_size=1')
+      if (vouchersRes.data) {
+        stats.value.vouchersCount = vouchersRes.data.total || 0
+      }
+    } catch (voucherError) {
+      console.log('凭证数据获取失败（无权限或错误）:', voucherError)
+      stats.value.vouchersCount = 0
     }
   } catch (error) {
     console.error('获取数据失败:', error)
