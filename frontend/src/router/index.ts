@@ -36,6 +36,11 @@ const router = createRouter({
           component: () => import('@/views/bank-flows/index.vue')
         },
         {
+          path: 'customers',
+          name: 'Customers',
+          component: () => import('@/views/customers/index.vue')
+        },
+        {
           path: 'audit',
           name: 'Audit',
           component: () => import('@/views/audit/Workbench.vue')
