@@ -59,6 +59,46 @@ const router = createRouter({
           path: 'audit',
           name: 'Audit',
           component: () => import('@/views/audit/Workbench.vue')
+        },
+        {
+          path: 'customers/analytics',
+          name: 'CustomerAnalytics',
+          component: () => import('@/views/customers/Analytics.vue')
+        },
+        {
+          path: 'reports/balance-sheet',
+          name: 'BalanceSheet',
+          component: () => import('@/views/reports/BalanceSheet.vue')
+        },
+        {
+          path: 'reports/income-statement',
+          name: 'IncomeStatement',
+          component: () => import('@/views/reports/IncomeStatement.vue')
+        },
+        {
+          path: 'reports/cash-flow',
+          name: 'CashFlow',
+          component: () => import('@/views/reports/CashFlow.vue')
+        },
+        {
+          path: 'reports/subject-balance',
+          name: 'SubjectBalance',
+          component: () => import('@/views/reports/SubjectBalance.vue')
+        },
+        {
+          path: 'system/roles',
+          name: 'SystemRoles',
+          component: () => import('@/views/system/roles.vue')
+        },
+        {
+          path: 'system/logs',
+          name: 'SystemLogs',
+          component: () => import('@/views/system/logs.vue')
+        },
+        {
+          path: 'system/settings',
+          name: 'SystemSettings',
+          component: () => import('@/views/system/settings.vue')
         }
       ]
     }

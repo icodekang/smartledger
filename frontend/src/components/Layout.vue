@@ -37,6 +37,38 @@
           <el-icon><Checked /></el-icon>
           <span>审核工作台</span>
         </el-menu-item>
+
+        <el-sub-menu index="/customers">
+          <template #title>
+            <el-icon><User /></el-icon>
+            <span>客户管理</span>
+          </template>
+          <el-menu-item index="/customers">客户资料</el-menu-item>
+          <el-menu-item index="/contracts">合同管理</el-menu-item>
+          <el-menu-item index="/customers/analytics">统计分析</el-menu-item>
+        </el-sub-menu>
+
+        <el-sub-menu index="/reports">
+          <template #title>
+            <el-icon><TrendCharts /></el-icon>
+            <span>财务报表</span>
+          </template>
+          <el-menu-item index="/reports/balance-sheet">资产负债表</el-menu-item>
+          <el-menu-item index="/reports/income-statement">利润表</el-menu-item>
+          <el-menu-item index="/reports/cash-flow">现金流量表</el-menu-item>
+          <el-menu-item index="/reports/subject-balance">科目余额表</el-menu-item>
+        </el-sub-menu>
+
+        <el-sub-menu index="/system">
+          <template #title>
+            <el-icon><Setting /></el-icon>
+            <span>系统管理</span>
+          </template>
+          <el-menu-item index="/system/users">用户管理</el-menu-item>
+          <el-menu-item index="/system/roles">角色权限</el-menu-item>
+          <el-menu-item index="/system/logs">操作日志</el-menu-item>
+          <el-menu-item index="/system/settings">系统配置</el-menu-item>
+        </el-sub-menu>
       </el-menu>
     </el-aside>
     
@@ -68,6 +100,7 @@
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '../stores/auth'
+import { HomeFilled, Document, Tickets, Money, Checked, User, TrendCharts, Setting, ArrowDown } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
