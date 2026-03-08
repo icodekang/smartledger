@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from decimal import Decimal
+import uuid
 
 from app.core.database import get_db
 from app.core.response import success_response, error_response, ResponseModel, ListData
@@ -293,7 +294,9 @@ async def upload_invoice(
     from io import BytesIO
     storage = StorageService()
     try:
-        object_name = f"invoices/{current_user.customer_id}/{file.filename}"
+        # 如果customer_id为None，使用user_id作为替代
+        customer_id_for_path = str(current_user.customer_id) if current_user.customer_id else str(current_user.id)
+        object_name = f"invoices/{customer_id_for_path}/{uuid.uuid4()}_{file.filename}"
         file_stream = BytesIO(contents)
         storage_path = await storage.upload_file(
             file_data=file_stream,
