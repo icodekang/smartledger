@@ -149,7 +149,9 @@ async def get_voucher(
     db: Session = Depends(get_db)
 ):
     """获取凭证详情"""
-    voucher = voucher_repo.get(db, voucher_id)
+    from sqlalchemy.orm import joinedload
+    
+    voucher = db.query(Voucher).options(joinedload(Voucher.items)).filter(Voucher.id == voucher_id).first()
     if not voucher:
         return error_response(404, "凭证不存在")
     
