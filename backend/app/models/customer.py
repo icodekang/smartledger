@@ -50,3 +50,4 @@ class Customer(BaseModel):
     contacts = relationship("CustomerContact", back_populates="customer", cascade="all, delete-orphan")
     addresses = relationship("CustomerAddress", back_populates="customer", cascade="all, delete-orphan")
     invoice_infos = relationship("CustomerInvoiceInfo", back_populates="customer", cascade="all, delete-orphan")
+    contracts = relationship("CustomerContract", back_populates="customer", cascade="all, delete-orphan")
