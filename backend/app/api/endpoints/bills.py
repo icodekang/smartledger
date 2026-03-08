@@ -290,15 +290,18 @@ async def upload_invoice(
         return error_response(400, "文件大小超过10MB限制")
     
     # 上传文件到存储服务
+    from io import BytesIO
     storage = StorageService()
     try:
+        object_name = f"invoices/{current_user.customer_id}/{file.filename}"
+        file_stream = BytesIO(contents)
         storage_path = await storage.upload_file(
-            contents, 
-            file.filename, 
-            file.content_type,
-            folder=f"invoices/{current_user.customer_id}"
+            file_data=file_stream,
+            object_name=object_name,
+            content_type=file.content_type,
+            file_size=file_size
         )
-        storage_url = await storage.get_file_url(storage_path)
+        storage_url = storage.get_file_url(storage_path)
     except Exception as e:
         return error_response(500, f"文件上传失败: {str(e)}")
     
