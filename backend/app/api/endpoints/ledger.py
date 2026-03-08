@@ -15,9 +15,9 @@ from app.core.response import success_response, error_response
 from app.core.permissions import require_permission
 from app.models.ledger import CustomerLedger
 
-ledger_router = APIRouter(prefix="/ledgers", tags=["账套管理"])
+router = APIRouter(prefix="/ledgers", tags=["账套管理"])
 
-@ledger_router.post("/customer/{customer_id}/init")
+@router.post("/customer/{customer_id}/init")
 async def init_ledgers(
     customer_id: str,
     start_period: str,  # 2024-01
@@ -53,7 +53,7 @@ async def init_ledgers(
     return success_response(data={"message": f"成功初始化 {periods} 个账期"})
 
 
-@ledger_router.get("/customer/{customer_id}")
+@router.get("/customer/{customer_id}")
 async def list_ledgers(
     customer_id: str,
     current_user=Depends(require_permission("ledgers:read")),
@@ -79,7 +79,7 @@ async def list_ledgers(
     return success_response(data={"items": items})
 
 
-@ledger_router.post("/{ledger_id}/close")
+@router.post("/{ledger_id}/close")
 async def close_ledger(
     ledger_id: str,
     current_user=Depends(require_permission("ledgers:manage")),
@@ -98,7 +98,7 @@ async def close_ledger(
     return success_response(data={"message": "结账成功"})
 
 
-@ledger_router.post("/{ledger_id}/reopen")
+@router.post("/{ledger_id}/reopen")
 async def reopen_ledger(
     ledger_id: str,
     current_user=Depends(require_permission("ledgers:manage")),
