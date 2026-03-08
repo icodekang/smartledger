@@ -202,6 +202,7 @@ import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { View, Plus } from '@element-plus/icons-vue'
 import { billApi, type BillDetail, type BillItem } from '../../api/bill'
+import BillImageViewer from '../../../components/BillImageViewer.vue'
 
 const props = defineProps<{
   modelValue: boolean
@@ -217,6 +218,8 @@ const visible = computed({
   get: () => props.modelValue,
   set: (val) => emit('update:modelValue', val)
 })
+
+// 其他代码保持不变...
 
 // 加载状态
 const loading = ref(false)
