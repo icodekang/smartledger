@@ -22,6 +22,9 @@ class VoucherDraft(BaseModel):
     confidence: float
     reason: str
     needs_review: bool
+    
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class VoucherAgent:
@@ -77,8 +80,16 @@ class VoucherAgent:
         
         needs_review = confidence < 85
         
+        # 确保 voucher_date 是字符串
+        voucher_date = bill_data.get('invoice_date')
+        if voucher_date is None:
+            from datetime import date
+            voucher_date = date.today().isoformat()
+        elif hasattr(voucher_date, 'isoformat'):
+            voucher_date = voucher_date.isoformat()
+        
         return VoucherDraft(
-            voucher_date=bill_data.get('invoice_date'),
+            voucher_date=voucher_date,
             summary=self._generate_summary(bill_data),
             entries=[VoucherEntry(**e) for e in entries],
             confidence=confidence,
