@@ -1,6 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from contextlib import asynccontextmanager
+import time
 
 from app.core.config import settings
 from app.core.logging import logger
@@ -25,6 +27,9 @@ app = FastAPI(
     default_response_class=APIResponse
 )
 
+# GZip 压缩（响应大于1KB时启用）
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 # CORS配置
 app.add_middleware(
     CORSMiddleware,
@@ -33,6 +38,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 性能监控中间件
+@app.middleware("http")
+async def performance_monitor(request: Request, call_next):
+    """监控接口响应时间"""
+    start_time = time.time()
+    response = await call_next(request)
+    duration = time.time() - start_time
+    
+    # 记录慢查询（超过1秒）
+    if duration > 1.0:
+        logger.warning(f"Slow request: {request.url.path} took {duration:.2f}s")
+    
+    # 添加响应时间头
+    response.headers["X-Response-Time"] = f"{duration:.3f}s"
+    
+    return response
 
 # 注册请求日志中间件
 app.middleware("http")(log_requests)
@@ -77,6 +99,13 @@ async def rate_limit_middleware(request, call_next):
     response.headers["X-RateLimit-Limit"] = str(limit)
     response.headers["X-RateLimit-Remaining"] = str(remaining)
     response.headers["X-RateLimit-Window"] = str(window)
+    
+    # 添加安全响应头
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     
     return response
 
