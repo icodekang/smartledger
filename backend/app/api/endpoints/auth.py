@@ -55,11 +55,41 @@ async def login(
     db: Session = Depends(get_db)
 ):
     """用户登录 - 限制5分钟内最多5次尝试"""
+    from datetime import datetime, timedelta
+    
+    # 查找用户
+    user = db.query(User).filter(User.username == form_data.username).first()
+    
+    # 检查账户是否被锁定
+    if user and user.locked_until and user.locked_until > datetime.utcnow():
+        remaining = (user.locked_until - datetime.utcnow()).seconds // 60
+        return error_response(403, f"账户已被锁定，请{remaining}分钟后重试")
+    
     try:
         auth_service = AuthService()
         result = await auth_service.authenticate(form_data.username, form_data.password, db)
+        
+        # 登录成功，重置失败次数
+        if user:
+            user.failed_login_attempts = 0
+            user.locked_until = None
+            db.commit()
+        
         return success_response(data=result.dict())
     except AuthenticationException as e:
+        # 登录失败，增加失败次数
+        if user:
+            user.failed_login_attempts = (user.failed_login_attempts or 0) + 1
+            user.last_failed_login = datetime.utcnow()
+            
+            # 连续5次失败，锁定账户30分钟
+            if user.failed_login_attempts >= 5:
+                user.locked_until = datetime.utcnow() + timedelta(minutes=30)
+                db.commit()
+                return error_response(403, "连续5次登录失败，账户已锁定30分钟")
+            
+            db.commit()
+        
         return error_response(401, e.message)
     except Exception as e:
         import traceback

@@ -327,6 +327,109 @@ async def get_audit_statistics(
     if audited_vouchers:
         total_seconds = sum(
             (v.audited_at - v.created_at).total_seconds()
+            for v in audited_vouchers if v.audited_at
+        )
+        avg_audit_time = total_seconds / len(audited_vouchers) / 3600  # 转换为小时
+    
+    return success_response(data={
+        "overview": {
+            "draft_count": draft_count,
+            "pending_count": pending_count,
+            "approved_count": approved_count,
+            "rejected_count": rejected_count
+        },
+        "performance": {
+            "today_approved": today_approved,
+            "month_approved": month_approved,
+            "avg_audit_time_hours": round(avg_audit_time, 2)
+        }
+    })
+
+
+@router.get("/tasks")
+async def get_all_tasks(
+    status: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    current_user=Depends(require_permission("audit:read")),
+    db: Session = Depends(get_db)
+):
+    """获取所有审核任务"""
+    skip = (page - 1) * page_size
+    
+    query = db.query(Voucher).filter(
+        Voucher.status.in_(["draft", "pending", "approved", "rejected"])
+    )
+    
+    if status:
+        query = query.filter(Voucher.status == status)
+    
+    total = query.count()
+    vouchers = query.order_by(Voucher.created_at.desc()).offset(skip).limit(page_size).all()
+    
+    items = []
+    for v in vouchers:
+        items.append({
+            "id": str(v.id),
+            "voucher_no": v.voucher_no,
+            "voucher_date": v.voucher_date.isoformat() if v.voucher_date else None,
+            "summary": v.summary,
+            "status": v.status,
+            "assigned_to": str(v.assigned_to) if v.assigned_to else None,
+            "auditor_id": str(v.auditor_id) if v.auditor_id else None,
+            "created_at": v.created_at.isoformat() if v.created_at else ""
+        })
+    
+    return success_response(data={
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    })
+
+
+@router.get("/my-tasks")
+async def get_my_tasks(
+    status: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    current_user=Depends(require_permission("audit:read")),
+    db: Session = Depends(get_db)
+):
+    """获取我的审核任务"""
+    skip = (page - 1) * page_size
+    
+    query = db.query(Voucher).filter(
+        Voucher.assigned_to == current_user.id
+    )
+    
+    if status:
+        query = query.filter(Voucher.status == status)
+    else:
+        query = query.filter(Voucher.status.in_(["pending", "approved", "rejected"]))
+    
+    total = query.count()
+    vouchers = query.order_by(Voucher.created_at.desc()).offset(skip).limit(page_size).all()
+    
+    items = []
+    for v in vouchers:
+        items.append({
+            "id": str(v.id),
+            "voucher_no": v.voucher_no,
+            "voucher_date": v.voucher_date.isoformat() if v.voucher_date else None,
+            "summary": v.summary,
+            "status": v.status,
+            "ai_confidence": float(v.ai_confidence) if v.ai_confidence else None,
+            "created_at": v.created_at.isoformat() if v.created_at else "",
+            "audited_at": v.audited_at.isoformat() if v.audited_at else None
+        })
+    
+    return success_response(data={
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    })
             for v in audited_vouchers
             if v.audited_at
         )
