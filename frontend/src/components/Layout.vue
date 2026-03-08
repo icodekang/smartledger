@@ -43,8 +43,8 @@
             <el-icon><User /></el-icon>
             <span>客户管理</span>
           </template>
-          <el-menu-item index="/customers">客户资料</el-menu-item>
-          <el-menu-item index="/contracts">合同管理</el-menu-item>
+          <el-menu-item index="/customers/list">客户资料</el-menu-item>
+          <el-menu-item index="/contracts/list">合同管理</el-menu-item>
           <el-menu-item index="/customers/analytics">统计分析</el-menu-item>
         </el-sub-menu>
 

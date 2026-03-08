@@ -36,12 +36,12 @@ const router = createRouter({
           component: () => import('@/views/bank-flows/index.vue')
         },
         {
-          path: 'customers',
+          path: 'customers/list',
           name: 'Customers',
           component: () => import('@/views/customers/index.vue')
         },
         {
-          path: 'contracts',
+          path: 'contracts/list',
           name: 'Contracts',
           component: () => import('@/views/contracts/index.vue')
         },
