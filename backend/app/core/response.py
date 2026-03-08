@@ -4,6 +4,11 @@ from fastapi.responses import JSONResponse
 from fastapi import HTTPException
 import time
 
+
+class APIResponse(JSONResponse):
+    """统一API响应类"""
+    pass
+
 T = TypeVar('T')
 
 

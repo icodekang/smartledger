@@ -140,8 +140,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { customerApi } from '../api/customer'
-import { reportApi } from '../api/report'
+import { customerApi } from '../../api/customer'
+import { reportApi } from '../../api/report'
 
 const customers = ref([])
 const selectedCustomerId = ref('')

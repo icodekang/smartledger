@@ -43,11 +43,11 @@ class Customer(BaseModel):
     # 审计字段
     created_by = Column(ForeignKey("users.id"))
     
-    # 关系
+    # 关系 - 使用字符串形式避免循环引用
     bills = relationship("Bill", back_populates="customer")
     vouchers = relationship("Voucher", back_populates="customer")
     bank_flows = relationship("BankFlow", back_populates="customer")
-    contacts = relationship("CustomerContact", back_populates="customer", cascade="all, delete-orphan")
-    addresses = relationship("CustomerAddress", back_populates="customer", cascade="all, delete-orphan")
-    invoice_infos = relationship("CustomerInvoiceInfo", back_populates="customer", cascade="all, delete-orphan")
-    contracts = relationship("CustomerContract", back_populates="customer", cascade="all, delete-orphan")
+    contacts = relationship("CustomerContact", back_populates="customer", cascade="all, delete-orphan", lazy="dynamic")
+    addresses = relationship("CustomerAddress", back_populates="customer", cascade="all, delete-orphan", lazy="dynamic")
+    invoice_infos = relationship("CustomerInvoiceInfo", back_populates="customer", cascade="all, delete-orphan", lazy="dynamic")
+    contracts = relationship("CustomerContract", back_populates="customer", cascade="all, delete-orphan", lazy="dynamic")
