@@ -23,35 +23,53 @@ async def list_all_contracts(
     db: Session = Depends(get_db)
 ):
     """获取所有合同列表"""
-    skip = (page - 1) * page_size
-    
-    query = db.query(CustomerContract)
-    total = query.count()
-    contracts = query.order_by(CustomerContract.created_at.desc()).offset(skip).limit(page_size).all()
-    
-    items = []
-    for c in contracts:
-        days_to_expire = (c.end_date - date.today()).days if c.end_date else 0
-        items.append({
-            "id": str(c.id),
-            "contract_no": c.contract_no,
-            "contract_name": c.contract_name,
-            "customer_id": str(c.customer_id),
-            "start_date": c.start_date.isoformat() if c.start_date else None,
-            "end_date": c.end_date.isoformat() if c.end_date else None,
-            "service_type": c.service_type,
-            "billing_amount": float(c.billing_amount) if c.billing_amount else 0,
-            "billing_cycle": c.billing_cycle,
-            "status": c.status,
-            "days_to_expire": days_to_expire if c.status == "active" else 0
+    try:
+        skip = (page - 1) * page_size
+        
+        query = db.query(CustomerContract)
+        total = query.count()
+        contracts = query.order_by(CustomerContract.created_at.desc()).offset(skip).limit(page_size).all()
+        
+        items = []
+        for c in contracts:
+            try:
+                days_to_expire = 0
+                if c.end_date and c.status == "active":
+                    if isinstance(c.end_date, str):
+                        from datetime import datetime
+                        end_date = datetime.strptime(c.end_date, "%Y-%m-%d").date()
+                    else:
+                        end_date = c.end_date
+                    days_to_expire = (end_date - date.today()).days
+                
+                items.append({
+                    "id": str(c.id),
+                    "contract_no": c.contract_no,
+                    "contract_name": c.contract_name,
+                    "customer_id": str(c.customer_id) if c.customer_id else None,
+                    "start_date": c.start_date.isoformat() if c.start_date else None,
+                    "end_date": c.end_date.isoformat() if c.end_date else None,
+                    "service_type": c.service_type,
+                    "billing_amount": float(c.billing_amount) if c.billing_amount else 0,
+                    "billing_cycle": c.billing_cycle,
+                    "status": c.status,
+                    "days_to_expire": max(0, days_to_expire)
+                })
+            except Exception as e:
+                # 跳过有问题的记录，继续处理其他记录
+                continue
+        
+        return success_response(data={
+            "items": items,
+            "total": total,
+            "page": page,
+            "page_size": page_size
         })
-    
-    return success_response(data={
-        "items": items,
-        "total": total,
-        "page": page,
-        "page_size": page_size
-    })
+    except Exception as e:
+        import traceback
+        print(f"Error in list_all_contracts: {str(e)}")
+        print(traceback.format_exc())
+        return error_response(500, f"获取合同列表失败: {str(e)}")
 
 
 @router.get("/{contract_id}")

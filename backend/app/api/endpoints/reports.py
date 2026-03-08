@@ -15,11 +15,11 @@ from app.core.response import success_response
 from app.core.permissions import require_permission
 from app.models.voucher import Voucher, VoucherItem
 
-report_router = APIRouter(prefix="/reports", tags=["财务报表"])
+router = APIRouter(prefix="/reports", tags=["财务报表"])
 
 # ===== TASK-REPORT-01: 资产负债表 =====
 
-@report_router.get("/balance-sheet")
+@router.get("/balance-sheet")
 async def get_balance_sheet(
     customer_id: str,
     period: str,  # 2024-03
@@ -103,7 +103,7 @@ async def get_balance_sheet(
 
 # ===== TASK-REPORT-02: 利润表 =====
 
-@report_router.get("/income-statement")
+@router.get("/income-statement")
 async def get_income_statement(
     customer_id: str,
     period: str,
@@ -158,7 +158,7 @@ async def get_income_statement(
 
 # ===== TASK-REPORT-03: 现金流量表 =====
 
-@report_router.get("/cash-flow")
+@router.get("/cash-flow")
 async def get_cash_flow(
     customer_id: str,
     period: str,
@@ -231,7 +231,7 @@ async def get_cash_flow(
 
 # ===== TASK-REPORT-04: 科目余额表 =====
 
-@report_router.get("/subject-balance")
+@router.get("/subject-balance")
 async def get_subject_balance(
     customer_id: str,
     period: str,

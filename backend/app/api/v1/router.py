@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from app.api.endpoints import (
     auth, files, vouchers, bills, bank_flows, audit, 
-    customers, users, contracts, bank_accounts, ledger
+    customers, users, contracts, bank_accounts, ledger, reports
 )
 
 router = APIRouter(prefix="/api/v1")
@@ -19,3 +19,4 @@ router.include_router(users.router)
 router.include_router(contracts.router)
 router.include_router(bank_accounts.router)
 router.include_router(ledger.router)
+router.include_router(reports.router)

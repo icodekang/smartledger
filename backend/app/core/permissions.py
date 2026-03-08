@@ -26,16 +26,17 @@ PERMISSIONS = {
         "contracts:read", "contracts:create", "contracts:update",
         "bank_accounts:read", "bank_accounts:create", "bank_accounts:update",
         "customers:read", "customers:create", "customers:update",
-        "ledgers:read", "ledgers:manage"
+        "ledgers:read", "ledgers:manage",
+        "reports:read"
     ],
     Role.VIEWER: ["bills:read", "vouchers:read", "dashboard:read",
                   "contracts:read", "bank_accounts:read", "customers:read",
-                  "ledgers:read"],
+                  "ledgers:read", "reports:read"],
     Role.CUSTOMER: [
         "bills:read", "bills:create", "bills:update",
         "vouchers:read", "dashboard:read", "audit:read",
         "contracts:read", "bank_accounts:read", "customers:read",
-        "ledgers:read"
+        "ledgers:read", "reports:read"
     ]
 }
 
