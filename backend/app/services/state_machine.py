@@ -15,9 +15,9 @@ class VoucherStateMachine:
     """凭证状态机"""
     
     TRANSITIONS = {
-        VoucherStatus.DRAFT: [VoucherStatus.PENDING],
+        VoucherStatus.DRAFT: [VoucherStatus.PENDING, VoucherStatus.APPROVED, VoucherStatus.REJECTED],
         VoucherStatus.PENDING: [VoucherStatus.APPROVED, VoucherStatus.REJECTED],
-        VoucherStatus.APPROVED: [VoucherStatus.POSTED, VoucherStatus.PENDING],
+        VoucherStatus.APPROVED: [VoucherStatus.POSTED, VoucherStatus.PENDING, VoucherStatus.DRAFT],
         VoucherStatus.REJECTED: [VoucherStatus.PENDING, VoucherStatus.DRAFT],
         VoucherStatus.POSTED: []
     }

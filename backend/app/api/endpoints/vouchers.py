@@ -21,6 +21,70 @@ router = APIRouter(prefix="/vouchers", tags=["凭证"])
 voucher_repo = BaseRepository(Voucher)
 
 
+# 会计科目数据
+ACCOUNTS = [
+    {"code": "1001", "name": "库存现金", "category": "资产"},
+    {"code": "1002", "name": "银行存款", "category": "资产"},
+    {"code": "1122", "name": "应收账款", "category": "资产"},
+    {"code": "1403", "name": "原材料", "category": "资产"},
+    {"code": "1405", "name": "库存商品", "category": "资产"},
+    {"code": "1601", "name": "固定资产", "category": "资产"},
+    {"code": "2001", "name": "短期借款", "category": "负债"},
+    {"code": "2202", "name": "应付账款", "category": "负债"},
+    {"code": "2221", "name": "应交税费", "category": "负债"},
+    {"code": "4001", "name": "实收资本", "category": "权益"},
+    {"code": "4103", "name": "本年利润", "category": "权益"},
+    {"code": "4104", "name": "利润分配", "category": "权益"},
+    {"code": "5001", "name": "生产成本", "category": "成本"},
+    {"code": "6001", "name": "主营业务收入", "category": "损益"},
+    {"code": "6051", "name": "其他业务收入", "category": "损益"},
+    {"code": "6401", "name": "主营业务成本", "category": "损益"},
+    {"code": "6403", "name": "税金及附加", "category": "损益"},
+    {"code": "6601", "name": "销售费用", "category": "损益"},
+    {"code": "6602", "name": "管理费用", "category": "损益"},
+    {"code": "6603", "name": "财务费用", "category": "损益"},
+]
+
+
+# 记账规则数据
+RULES = [
+    {"id": "rule_001", "name": "采购入库", "description": "采购商品入库", "entries": [
+        {"subject_code": "1405", "subject_name": "库存商品", "debit": "{amount}", "credit": "0", "summary": "采购商品"},
+        {"subject_code": "2221", "subject_name": "应交税费", "debit": "{tax}", "credit": "0", "summary": "进项税额"},
+        {"subject_code": "2202", "subject_name": "应付账款", "debit": "0", "credit": "{total}", "summary": "应付货款"}
+    ]},
+    {"id": "rule_002", "name": "销售出库", "description": "销售商品出库", "entries": [
+        {"subject_code": "1122", "subject_name": "应收账款", "debit": "{total}", "credit": "0", "summary": "应收货款"},
+        {"subject_code": "6001", "subject_name": "主营业务收入", "debit": "0", "credit": "{amount}", "summary": "销售收入"},
+        {"subject_code": "2221", "subject_name": "应交税费", "debit": "0", "credit": "{tax}", "summary": "销项税额"}
+    ]},
+    {"id": "rule_003", "name": "费用报销", "description": "管理费用报销", "entries": [
+        {"subject_code": "6602", "subject_name": "管理费用", "debit": "{amount}", "credit": "0", "summary": "管理费用"},
+        {"subject_code": "1001", "subject_name": "库存现金", "debit": "0", "credit": "{amount}", "summary": "现金支付"}
+    ]},
+]
+
+
+@router.get("/accounts")
+async def get_accounts(
+    category: Optional[str] = None,
+    current_user=Depends(require_permission("vouchers:read"))
+):
+    """获取会计科目列表"""
+    items = ACCOUNTS
+    if category:
+        items = [a for a in items if a["category"] == category]
+    return success_response(data={"items": items})
+
+
+@router.get("/rules")
+async def get_rules(
+    current_user=Depends(require_permission("vouchers:read"))
+):
+    """获取记账规则列表"""
+    return success_response(data={"items": RULES})
+
+
 @router.get("")
 async def list_vouchers(
     page: int = Query(1, ge=1, description="页码"),
