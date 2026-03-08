@@ -15,7 +15,7 @@ from app.core.response import success_response, error_response
 from app.core.permissions import require_permission
 from app.models.user import User
 
-sys_router = APIRouter(prefix="/sys", tags=["系统管理"])
+router = APIRouter(prefix="/sys", tags=["系统管理"])
 
 # ===== TASK-SYS-01: 用户管理 =====
 
@@ -28,7 +28,7 @@ class UserCreateRequest(BaseModel):
     role: str = "viewer"
     is_active: bool = True
 
-@sys_router.get("/users")
+@router.get("/users")
 async def list_users(
     keyword: Optional[str] = None,
     role: Optional[str] = None,
@@ -71,7 +71,7 @@ async def list_users(
     return success_response(data={"items": items, "total": total})
 
 
-@sys_router.post("/users")
+@router.post("/users")
 async def create_user(
     request: UserCreateRequest,
     current_user=Depends(require_permission("sys:users:create")),
@@ -99,7 +99,7 @@ async def create_user(
     return success_response(data={"id": str(user.id), "message": "用户创建成功"})
 
 
-@sys_router.put("/users/{user_id}")
+@router.put("/users/{user_id}")
 async def update_user(
     user_id: str,
     request: dict,
@@ -119,7 +119,7 @@ async def update_user(
     return success_response(data={"message": "用户更新成功"})
 
 
-@sys_router.delete("/users/{user_id}")
+@router.delete("/users/{user_id}")
 async def delete_user(
     user_id: str,
     current_user=Depends(require_permission("sys:users:delete")),
@@ -163,7 +163,7 @@ ROLES_CONFIG = {
     }
 }
 
-@sys_router.get("/roles")
+@router.get("/roles")
 async def list_roles(
     current_user=Depends(require_permission("sys:roles:read"))
 ):
@@ -197,7 +197,7 @@ class OperationLog(BaseModel):
     request_data = Column(JSON)
     created_at = Column(datetime, default=datetime.utcnow)
 
-@sys_router.get("/logs")
+@router.get("/logs")
 async def list_logs(
     action: Optional[str] = None,
     user_id: Optional[str] = None,
@@ -254,7 +254,7 @@ SYSTEM_CONFIG = {
     "enable_oauth": False
 }
 
-@sys_router.get("/config")
+@router.get("/config")
 async def get_config(
     current_user=Depends(require_permission("sys:config:read"))
 ):
@@ -262,7 +262,7 @@ async def get_config(
     return success_response(data=SYSTEM_CONFIG)
 
 
-@sys_router.put("/config")
+@router.put("/config")
 async def update_config(
     config: dict,
     current_user=Depends(require_permission("sys:config:update"))

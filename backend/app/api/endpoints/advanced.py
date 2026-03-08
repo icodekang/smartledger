@@ -15,13 +15,13 @@ from app.core.database import get_db
 from app.core.response import success_response, error_response
 from app.core.permissions import require_permission
 
-adv_router = APIRouter(prefix="/adv", tags=["高级功能"])
+router = APIRouter(prefix="/adv", tags=["高级功能"])
 
 # ===== TASK-ADV-01: 多租户支持 =====
 
 TENANT_CONFIG = {}
 
-@adv_router.get("/tenant/config")
+@router.get("/tenant/config")
 async def get_tenant_config(
     current_user=Depends(require_permission("adv:tenant:read"))
 ):
@@ -44,7 +44,7 @@ class BackupRequest(BaseModel):
     backup_type: str = "full"  # full/incremental
     description: Optional[str] = None
 
-@adv_router.post("/backup")
+@router.post("/backup")
 async def create_backup(
     request: BackupRequest,
     background_tasks: BackgroundTasks,
@@ -82,7 +82,7 @@ async def run_backup(backup_id: str, customer_id: str):
         "size": 104857600  # 100MB
     })
 
-@adv_router.get("/backup/tasks")
+@router.get("/backup/tasks")
 async def list_backup_tasks(
     current_user=Depends(require_permission("adv:backup:read"))
 ):
@@ -120,7 +120,7 @@ SCHEDULED_JOBS = {
     }
 }
 
-@adv_router.get("/scheduler/jobs")
+@router.get("/scheduler/jobs")
 async def list_scheduled_jobs(
     current_user=Depends(require_permission("adv:scheduler:read"))
 ):
@@ -129,7 +129,7 @@ async def list_scheduled_jobs(
         "items": list(SCHEDULED_JOBS.values())
     })
 
-@adv_router.post("/scheduler/jobs/{job_id}/toggle")
+@router.post("/scheduler/jobs/{job_id}/toggle")
 async def toggle_job(
     job_id: str,
     current_user=Depends(require_permission("adv:scheduler:update"))
@@ -156,7 +156,7 @@ class NotificationRequest(BaseModel):
     type: str = "system"  # system/email/sms/wechat
     target_users: Optional[List[str]] = None  # None表示全体
 
-@adv_router.get("/notifications")
+@router.get("/notifications")
 async def list_notifications(
     unread_only: bool = False,
     page: int = 1,
@@ -179,7 +179,7 @@ async def list_notifications(
     
     return success_response(data={"items": items, "total": total})
 
-@adv_router.post("/notifications")
+@router.post("/notifications")
 async def create_notification(
     request: NotificationRequest,
     current_user=Depends(require_permission("adv:notifications:create"))
@@ -204,7 +204,7 @@ async def create_notification(
     
     return success_response(data={"id": notification["id"], "message": "消息已发送"})
 
-@adv_router.post("/notifications/{notification_id}/read")
+@router.post("/notifications/{notification_id}/read")
 async def mark_notification_read(
     notification_id: str,
     current_user=Depends(require_permission("adv:notifications:read"))
@@ -218,7 +218,7 @@ async def mark_notification_read(
     
     return success_response(data={"message": "已标记为已读"})
 
-@adv_router.get("/notifications/unread-count")
+@router.get("/notifications/unread-count")
 async def get_unread_count(
     current_user=Depends(require_permission("adv:notifications:read"))
 ):
