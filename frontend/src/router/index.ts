@@ -41,6 +41,21 @@ const router = createRouter({
           component: () => import('@/views/customers/index.vue')
         },
         {
+          path: 'contracts',
+          name: 'Contracts',
+          component: () => import('@/views/contracts/index.vue')
+        },
+        {
+          path: 'reports',
+          name: 'Reports',
+          component: () => import('@/views/reports/index.vue')
+        },
+        {
+          path: 'system/users',
+          name: 'SystemUsers',
+          component: () => import('@/views/system/users.vue')
+        },
+        {
           path: 'audit',
           name: 'Audit',
           component: () => import('@/views/audit/Workbench.vue')
