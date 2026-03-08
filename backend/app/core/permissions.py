@@ -22,12 +22,17 @@ PERMISSIONS = {
     Role.ACCOUNTANT: [
         "bills:read", "bills:create", "bills:update",
         "vouchers:read", "vouchers:create", "vouchers:audit",
-        "dashboard:read", "audit:read", "audit:approve"
+        "dashboard:read", "audit:read", "audit:approve",
+        "contracts:read", "contracts:create", "contracts:update",
+        "bank_accounts:read", "bank_accounts:create", "bank_accounts:update",
+        "customers:read", "customers:create", "customers:update"
     ],
-    Role.VIEWER: ["bills:read", "vouchers:read", "dashboard:read"],
+    Role.VIEWER: ["bills:read", "vouchers:read", "dashboard:read",
+                  "contracts:read", "bank_accounts:read", "customers:read"],
     Role.CUSTOMER: [
         "bills:read", "bills:create", "bills:update",
-        "vouchers:read", "dashboard:read", "audit:read"
+        "vouchers:read", "dashboard:read", "audit:read",
+        "contracts:read", "bank_accounts:read", "customers:read"
     ]
 }
 

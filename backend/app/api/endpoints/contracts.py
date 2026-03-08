@@ -14,6 +14,76 @@ from app.models.customer import Customer
 
 router = APIRouter(prefix="/contracts", tags=["合同管理"])
 
+
+@router.get("")
+async def list_all_contracts(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    current_user=Depends(require_permission("contracts:read")),
+    db: Session = Depends(get_db)
+):
+    """获取所有合同列表"""
+    skip = (page - 1) * page_size
+    
+    query = db.query(CustomerContract)
+    total = query.count()
+    contracts = query.order_by(CustomerContract.created_at.desc()).offset(skip).limit(page_size).all()
+    
+    items = []
+    for c in contracts:
+        days_to_expire = (c.end_date - date.today()).days if c.end_date else 0
+        items.append({
+            "id": str(c.id),
+            "contract_no": c.contract_no,
+            "contract_name": c.contract_name,
+            "customer_id": str(c.customer_id),
+            "start_date": c.start_date.isoformat() if c.start_date else None,
+            "end_date": c.end_date.isoformat() if c.end_date else None,
+            "service_type": c.service_type,
+            "billing_amount": float(c.billing_amount) if c.billing_amount else 0,
+            "billing_cycle": c.billing_cycle,
+            "status": c.status,
+            "days_to_expire": days_to_expire if c.status == "active" else 0
+        })
+    
+    return success_response(data={
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    })
+
+
+@router.get("/{contract_id}")
+async def get_contract(
+    contract_id: str,
+    current_user=Depends(require_permission("contracts:read")),
+    db: Session = Depends(get_db)
+):
+    """获取合同详情"""
+    contract = db.query(CustomerContract).filter(CustomerContract.id == contract_id).first()
+    if not contract:
+        return error_response(404, "合同不存在")
+    
+    days_to_expire = (contract.end_date - date.today()).days if contract.end_date else 0
+    
+    return success_response(data={
+        "id": str(contract.id),
+        "contract_no": contract.contract_no,
+        "contract_name": contract.contract_name,
+        "customer_id": str(contract.customer_id),
+        "start_date": contract.start_date.isoformat() if contract.start_date else None,
+        "end_date": contract.end_date.isoformat() if contract.end_date else None,
+        "service_type": contract.service_type,
+        "service_content": contract.service_content,
+        "billing_amount": float(contract.billing_amount) if contract.billing_amount else 0,
+        "billing_cycle": contract.billing_cycle,
+        "payment_terms": contract.payment_terms,
+        "payment_day": contract.payment_day,
+        "status": contract.status,
+        "days_to_expire": days_to_expire if contract.status == "active" else 0
+    })
+
 class ContractCreateRequest(BaseModel):
     contract_name: str
     start_date: date
