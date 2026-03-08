@@ -9,6 +9,7 @@ class BankFlow(BaseModel):
     __tablename__ = "bank_flows"
     
     customer_id = Column(ForeignKey("customers.id"), nullable=False)
+    bank_account_id = Column(ForeignKey("bank_accounts.id"), nullable=True)
     
     # 交易信息
     transaction_date = Column(Date, nullable=False, comment="交易日期")
@@ -27,6 +28,7 @@ class BankFlow(BaseModel):
     summary = Column(String(500), nullable=True, comment="摘要/用途")
     transaction_type = Column(String(50), nullable=True, comment="交易类型")
     transaction_channel = Column(String(50), nullable=True, comment="交易渠道")
+    reference_no = Column(String(100), nullable=True, comment="银行流水号")
     
     # 匹配状态
     match_status = Column(String(20), default="unmatched", comment="匹配状态: unmatched/matched/ignored")
@@ -41,4 +43,5 @@ class BankFlow(BaseModel):
     
     # 关系
     customer = relationship("Customer", back_populates="bank_flows")
+    bank_account = relationship("BankAccount", back_populates="bank_flows")
     matched_bill = relationship("Bill", back_populates="bank_flow_matches")
