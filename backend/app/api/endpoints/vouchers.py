@@ -221,12 +221,16 @@ async def generate_vouchers(
             count = db.query(Voucher).filter(Voucher.period == period).count() + 1
             voucher_no = f"PZ{period}{count:04d}"
             
+            # 使用票据日期作为凭证日期，如果没有则使用当前日期
+            voucher_date = bill.invoice_date if bill.invoice_date else datetime.now().date()
+            voucher_period = voucher_date.strftime("%Y%m") if voucher_date else period
+            
             # 创建凭证
             voucher = Voucher(
                 customer_id=bill.customer_id,
                 voucher_no=voucher_no,
-                voucher_date=datetime.now().date(),
-                period=period,
+                voucher_date=voucher_date,
+                period=voucher_period,
                 summary=voucher_data.get("summary", "自动生成的凭证"),
                 ai_confidence=voucher_data.get("confidence", 0.8),
                 ai_reason=voucher_data.get("reason", ""),
