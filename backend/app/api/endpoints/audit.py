@@ -92,17 +92,17 @@ async def get_pending_tasks(
 ):
     """获取待审核任务列表"""
     skip = (page - 1) * page_size
-    
+
     # 构建查询
     query = db.query(Voucher, User).join(User, Voucher.customer_id == User.id)
-    
+
     # 审核员只能看到分配给自己的或待分配的
     if current_user.role == "auditor":
         query = query.filter(
             (Voucher.assigned_to == current_user.id) |
             (Voucher.assigned_to.is_(None))
         )
-    
+
     # 状态过滤
     if status == "pending":
         query = query.filter(Voucher.status == "draft")
@@ -110,23 +110,23 @@ async def get_pending_tasks(
         query = query.filter(Voucher.status == "pending")
     else:
         query = query.filter(Voucher.status.in_(["draft", "pending"]))
-    
+
     # 提交人不能审核自己的单据
     query = query.filter(Voucher.customer_id != current_user.id)
-    
+
     # 排序和分页
     total = query.count()
     results = query.order_by(Voucher.created_at.desc()).offset(skip).limit(page_size).all()
-    
+
     # 构建响应
     items = []
     for voucher, submitter in results:
         # 计算凭证总金额
         total_amount = sum(
-            float(item.debit_amount or 0) 
+            float(item.debit_amount or 0)
             for item in voucher.items
         ) if voucher.items else 0
-        
+
         items.append(AuditTaskItem(
             voucher_id=str(voucher.id),
             voucher_no=voucher.voucher_no,
@@ -138,7 +138,7 @@ async def get_pending_tasks(
             submitter=submitter.name or submitter.username,
             customer_name=submitter.name
         ))
-    
+
     # 统计信息
     stats_query = db.query(Voucher)
     if current_user.role == "auditor":
@@ -147,11 +147,11 @@ async def get_pending_tasks(
             (Voucher.assigned_to.is_(None))
         )
     stats_query = stats_query.filter(Voucher.customer_id != current_user.id)
-    
+
     pending_count = stats_query.filter(Voucher.status == "draft").count()
     assigned_count = stats_query.filter(Voucher.status == "pending").count()
     my_assigned = stats_query.filter(Voucher.assigned_to == current_user.id).count()
-    
+
     return success_response(data={
         "items": items,
         "total": total,
@@ -175,32 +175,32 @@ async def batch_audit(
     """批量审核"""
     if request.action not in ["approve", "reject"]:
         return error_response(400, "无效的审核动作")
-    
+
     new_status = "approved" if request.action == "approve" else "rejected"
     updated_count = 0
     failed_ids = []
-    
+
     for voucher_id in request.voucher_ids:
         voucher = voucher_repo.get(db, voucher_id)
         if not voucher:
             failed_ids.append({"id": voucher_id, "reason": "凭证不存在"})
             continue
-        
+
         # 检查权限
         if str(voucher.assigned_to) != str(current_user.id) and current_user.role != "admin":
             failed_ids.append({"id": voucher_id, "reason": "无权审核此凭证"})
             continue
-        
+
         # 提交人不能审核自己的单据
         if str(voucher.customer_id) == str(current_user.id):
             failed_ids.append({"id": voucher_id, "reason": "不能审核自己的单据"})
             continue
-        
+
         # 检查状态
         if voucher.status not in ["draft", "pending"]:
             failed_ids.append({"id": voucher_id, "reason": f"当前状态不允许审核: {voucher.status}"})
             continue
-        
+
         # 更新状态
         voucher_repo.update(db, db_obj=voucher, obj_in={
             "status": new_status,
@@ -209,7 +209,7 @@ async def batch_audit(
             "audited_at": datetime.now()
         })
         updated_count += 1
-    
+
     return success_response(data={
         "updated_count": updated_count,
         "failed_count": len(failed_ids),
@@ -229,27 +229,27 @@ async def assign_tasks(
     auditor = db.query(User).filter(User.id == request.auditor_id).first()
     if not auditor:
         return error_response(404, "审核人不存在")
-    
+
     assigned_count = 0
     failed_ids = []
-    
+
     for voucher_id in request.voucher_ids:
         voucher = voucher_repo.get(db, voucher_id)
         if not voucher:
             failed_ids.append({"id": voucher_id, "reason": "凭证不存在"})
             continue
-        
+
         if voucher.status != "draft":
             failed_ids.append({"id": voucher_id, "reason": f"当前状态不允许分配: {voucher.status}"})
             continue
-        
+
         # 分配任务
         voucher_repo.update(db, db_obj=voucher, obj_in={
             "assigned_to": request.auditor_id,
             "status": "pending"
         })
         assigned_count += 1
-    
+
     return success_response(data={
         "assigned_count": assigned_count,
         "auditor_id": request.auditor_id,
@@ -272,7 +272,7 @@ async def auto_assign_tasks(
         Voucher.assigned_to.is_(None),
         Voucher.customer_id != current_user.id  # 排除自己的
     ).order_by(Voucher.created_at.asc()).limit(count).all()
-    
+
     assigned_count = 0
     for voucher in vouchers:
         voucher_repo.update(db, db_obj=voucher, obj_in={
@@ -280,7 +280,7 @@ async def auto_assign_tasks(
             "status": "pending"
         })
         assigned_count += 1
-    
+
     return success_response(data={
         "assigned_count": assigned_count,
         "auditor_id": str(current_user.id),
@@ -296,31 +296,31 @@ async def get_audit_statistics(
     """获取审核统计信息"""
     # 基础查询
     base_query = db.query(Voucher)
-    
+
     # 审核员只能看到自己的统计
     if current_user.role == "auditor":
         base_query = base_query.filter(Voucher.assigned_to == current_user.id)
-    
+
     # 各状态统计
     draft_count = base_query.filter(Voucher.status == "draft").count()
     pending_count = base_query.filter(Voucher.status == "pending").count()
     approved_count = base_query.filter(Voucher.status == "approved").count()
     rejected_count = base_query.filter(Voucher.status == "rejected").count()
-    
+
     # 今日审核数量
     today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     today_approved = base_query.filter(
         Voucher.status == "approved",
         Voucher.audited_at >= today
     ).count()
-    
+
     # 本月审核数量
     this_month = today.replace(day=1)
     month_approved = base_query.filter(
         Voucher.status == "approved",
         Voucher.audited_at >= this_month
     ).count()
-    
+
     # 平均审核时间（简化计算）
     audited_vouchers = base_query.filter(Voucher.status.in_(["approved", "rejected"])).all()
     avg_audit_time = 0
@@ -330,7 +330,7 @@ async def get_audit_statistics(
             for v in audited_vouchers if v.audited_at
         )
         avg_audit_time = total_seconds / len(audited_vouchers) / 3600  # 转换为小时
-    
+
     return success_response(data={
         "overview": {
             "draft_count": draft_count,
@@ -356,17 +356,17 @@ async def get_all_tasks(
 ):
     """获取所有审核任务"""
     skip = (page - 1) * page_size
-    
+
     query = db.query(Voucher).filter(
         Voucher.status.in_(["draft", "pending", "approved", "rejected"])
     )
-    
+
     if status:
         query = query.filter(Voucher.status == status)
-    
+
     total = query.count()
     vouchers = query.order_by(Voucher.created_at.desc()).offset(skip).limit(page_size).all()
-    
+
     items = []
     for v in vouchers:
         items.append({
@@ -379,7 +379,7 @@ async def get_all_tasks(
             "auditor_id": str(v.auditor_id) if v.auditor_id else None,
             "created_at": v.created_at.isoformat() if v.created_at else ""
         })
-    
+
     return success_response(data={
         "items": items,
         "total": total,
@@ -398,19 +398,19 @@ async def get_my_tasks(
 ):
     """获取我的审核任务"""
     skip = (page - 1) * page_size
-    
+
     query = db.query(Voucher).filter(
         Voucher.assigned_to == current_user.id
     )
-    
+
     if status:
         query = query.filter(Voucher.status == status)
     else:
         query = query.filter(Voucher.status.in_(["pending", "approved", "rejected"]))
-    
+
     total = query.count()
     vouchers = query.order_by(Voucher.created_at.desc()).offset(skip).limit(page_size).all()
-    
+
     items = []
     for v in vouchers:
         items.append({
@@ -423,13 +423,51 @@ async def get_my_tasks(
             "created_at": v.created_at.isoformat() if v.created_at else "",
             "audited_at": v.audited_at.isoformat() if v.audited_at else None
         })
-    
+
     return success_response(data={
         "items": items,
         "total": total,
         "page": page,
         "page_size": page_size
     })
+
+
+@router.get("/statistics")
+async def get_audit_statistics(
+    current_user=Depends(require_permission("audit:read")),
+    db: Session = Depends(get_db)
+):
+    """获取审核统计信息"""
+    # 获取各类状态的凭证数量
+    draft_count = db.query(Voucher).filter(Voucher.status == "draft").count()
+    pending_count = db.query(Voucher).filter(Voucher.status == "pending").count()
+    approved_count = db.query(Voucher).filter(Voucher.status == "approved").count()
+    rejected_count = db.query(Voucher).filter(Voucher.status == "rejected").count()
+    
+    # 今日审核通过数量
+    from datetime import date
+    today = date.today()
+    today_approved = db.query(Voucher).filter(
+        Voucher.status == "approved",
+        Voucher.audited_at >= today
+    ).count()
+    
+    # 本月审核通过数量
+    month_approved = db.query(Voucher).filter(
+        Voucher.status == "approved",
+        Voucher.audited_at >= today.replace(day=1)
+    ).count()
+    
+    # 平均审核时间
+    avg_audit_time = 0
+    audited_vouchers = db.query(Voucher).filter(
+        Voucher.status.in_(["approved", "rejected"]),
+        Voucher.audited_at.isnot(None)
+    ).all()
+    
+    if audited_vouchers:
+        total_seconds = sum(
+            (v.audited_at - v.created_at).total_seconds()
             for v in audited_vouchers
             if v.audited_at
         )
