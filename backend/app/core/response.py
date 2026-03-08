@@ -1,6 +1,7 @@
 from typing import Any, Optional, Generic, TypeVar, List
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
+from fastapi import HTTPException
 import time
 
 T = TypeVar('T')
@@ -33,14 +34,14 @@ def success_response(data: Any = None, message: str = "success") -> ResponseMode
     return ResponseModel(code=200, message=message, data=data)
 
 
-def error_response(code: int, message: str, data: Any = None) -> ResponseModel:
-    """错误响应"""
-    return ResponseModel(code=code, message=message, data=data)
-
-
-class APIResponse(JSONResponse):
-    """自定义JSON响应"""
-    def render(self, content) -> bytes:
-        if isinstance(content, ResponseModel):
-            return super().render(content.dict())
-        return super().render(content)
+def error_response(code: int, message: str, data: Any = None):
+    """错误响应 - 返回HTTPException以正确设置状态码"""
+    raise HTTPException(
+        status_code=code if code >= 400 else 400,
+        detail={
+            "code": code,
+            "message": message,
+            "data": data,
+            "timestamp": int(time.time())
+        }
+    )

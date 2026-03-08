@@ -53,6 +53,28 @@ class VoucherAgent:
                 confidence = 0
                 reason = "无法生成凭证"
         
+        # 3. 如果entries为空，提供默认分录
+        if not entries:
+            total_amount = float(bill_data.get('total_amount', 0) or 0)
+            entries = [
+                {
+                    "subject_code": "560299",
+                    "subject_name": "管理费用-其他",
+                    "debit": total_amount,
+                    "credit": 0,
+                    "summary": self._generate_summary(bill_data)
+                },
+                {
+                    "subject_code": "2202",
+                    "subject_name": "应付账款",
+                    "debit": 0,
+                    "credit": total_amount,
+                    "summary": f"应付{bill_data.get('seller_name', '供应商')}货款"
+                }
+            ]
+            confidence = 30
+            reason = "AI推荐: 使用默认分录（未匹配到具体规则）"
+        
         needs_review = confidence < 85
         
         return VoucherDraft(
