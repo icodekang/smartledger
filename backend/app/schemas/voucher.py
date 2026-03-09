@@ -40,7 +40,7 @@ class VoucherCreate(BaseModel):
     voucher_date: date
     period: Optional[str] = None
     summary: Optional[str] = None
-    items: List[VoucherItemCreate] = Field(..., min_length=2, description="至少需要两条分录")
+    items: List[VoucherItemCreate] = Field(..., description="至少需要两条分录")
 
 
 class VoucherUpdate(BaseModel):

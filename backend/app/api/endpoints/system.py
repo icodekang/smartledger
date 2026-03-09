@@ -61,7 +61,6 @@ async def list_users(
             "username": u.username,
             "name": u.name,
             "phone": u.phone,
-            "email": u.email,
             "role": u.role,
             "is_active": u.is_active,
             "last_login": u.last_login.isoformat() if u.last_login else None,
@@ -180,7 +179,7 @@ async def list_roles(
 
 # ===== TASK-SYS-03: 操作日志 =====
 
-from sqlalchemy import Column, String, Text, JSON
+from sqlalchemy import Column, String, Text, JSON, DateTime
 from app.models.base import BaseModel
 
 class OperationLog(BaseModel):
@@ -195,7 +194,7 @@ class OperationLog(BaseModel):
     ip_address = Column(String(50))
     user_agent = Column(String(500))
     request_data = Column(JSON)
-    created_at = Column(datetime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 @router.get("/logs")
 async def list_logs(

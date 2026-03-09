@@ -1,5 +1,4 @@
 from sqlalchemy import Column, String, Date, Numeric, ForeignKey, JSON, Text, Integer
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from app.models.base import BaseModel
@@ -32,7 +31,7 @@ class Bill(BaseModel):
     storage_path = Column(String(500))
     storage_url = Column(String(500))
     
-    ocr_result = Column(JSONB)
+    ocr_result = Column(JSON)
     ocr_confidence = Column(Numeric(3, 2))
     
     # 发票基本信息

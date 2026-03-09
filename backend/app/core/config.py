@@ -1,15 +1,16 @@
-from pydantic_settings import BaseSettings
+from pydantic import BaseModel
 from functools import lru_cache
+import os
 
 
-class Settings(BaseSettings):
+class Settings(BaseModel):
     """应用配置"""
     APP_NAME: str = "SmartLedger AI"
     DEBUG: bool = False
     VERSION: str = "1.0.0"
     
     # 数据库
-    DATABASE_URL: str = "postgresql://smartledger:smartledger123@localhost:5433/smartledger"
+    DATABASE_URL: str = "sqlite:///./smartledger.db"
     
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -35,8 +36,23 @@ class Settings(BaseSettings):
     BAIDU_API_KEY: str = ""
     BAIDU_SECRET_KEY: str = ""
     
-    class Config:
-        env_file = ".env"
+    def __init__(self, **kwargs):
+        # 从环境变量读取
+        env_mapping = {
+            'APP_NAME': 'APP_NAME',
+            'DEBUG': 'DEBUG',
+            'DATABASE_URL': 'DATABASE_URL',
+            'REDIS_URL': 'REDIS_URL',
+            'SECRET_KEY': 'SECRET_KEY',
+            'DEEPSEEK_API_KEY': 'DEEPSEEK_API_KEY',
+        }
+        for attr, env_var in env_mapping.items():
+            if env_var in os.environ:
+                kwargs[attr] = os.environ[env_var]
+        # 布尔值转换
+        if 'DEBUG' in kwargs and isinstance(kwargs['DEBUG'], str):
+            kwargs['DEBUG'] = kwargs['DEBUG'].lower() in ('true', '1', 'yes')
+        super().__init__(**kwargs)
 
 
 @lru_cache()

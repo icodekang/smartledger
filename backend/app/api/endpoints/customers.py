@@ -199,7 +199,7 @@ async def create_customer(
     code = generate_customer_code(db)
     
     customer = Customer(
-        id=uuid.uuid4(),
+        id=str(uuid.uuid4()),
         code=code,
         name=request.name,
         short_name=request.short_name,
