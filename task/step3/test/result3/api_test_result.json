@@ -1,0 +1,94 @@
+{
+  "test_time": "2026-03-09T12:11:34.542996",
+  "total": 17,
+  "pass": 10,
+  "fail": 7,
+  "pass_rate": "58.8%",
+  "details": [
+    {
+      "name": "客户列表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "客户统计",
+      "status": "FAIL",
+      "code": 500
+    },
+    {
+      "name": "合同列表",
+      "status": "FAIL",
+      "code": 500
+    },
+    {
+      "name": "合同统计",
+      "status": "FAIL",
+      "code": 500
+    },
+    {
+      "name": "用户列表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "当前用户",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "银行流水列表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "银行账户列表",
+      "status": "FAIL",
+      "code": 500
+    },
+    {
+      "name": "票据列表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "凭证列表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "科目列表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "待审核任务",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "审核统计",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "我的任务",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "角色列表",
+      "status": "FAIL",
+      "code": 404
+    },
+    {
+      "name": "操作日志",
+      "status": "FAIL",
+      "code": 404
+    },
+    {
+      "name": "系统配置",
+      "status": "FAIL",
+      "code": 404
+    }
+  ]
+}
