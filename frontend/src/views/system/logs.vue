@@ -3,7 +3,7 @@
     <div class="page-header">
       <h2>操作日志审计</h2>
       <div class="header-actions">
-        <el-button type="danger" @click="clearLogs">
+        <el-button type="danger" @click="clearLogs" :disabled="!hasPermission">
           <el-icon><Delete /></el-icon>清空日志
         </el-button>
         <el-button type="primary" @click="exportLogs">
@@ -52,7 +52,7 @@
     <el-card class="filter-card">
       <el-form :inline="true" :model="filterForm">
         <el-form-item label="操作类型">
-          <el-select v-model="filterForm.type" placeholder="全部类型" clearable>
+          <el-select v-model="filterForm.type" placeholder="全部类型" clearable style="width: 120px">
             <el-option label="登录" value="login" />
             <el-option label="登出" value="logout" />
             <el-option label="创建" value="create" />
@@ -64,7 +64,11 @@
         </el-form-item>
 
         <el-form-item label="操作用户">
-          <el-input v-model="filterForm.username" placeholder="用户名" clearable />
+          <el-input v-model="filterForm.username" placeholder="用户名" clearable style="width: 120px" />
+        </el-form-item>
+
+        <el-form-item label="关键词">
+          <el-input v-model="filterForm.keyword" placeholder="操作内容关键词" clearable style="width: 150px" />
         </el-form-item>
 
         <el-form-item label="日期范围">
@@ -74,11 +78,15 @@
             range-separator="至"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
+            value-format="YYYY-MM-DD"
+            style="width: 240px"
           />
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" @click="searchLogs"><el-icon><Search /></el-icon>查询</el-button>
+          <el-button type="primary" @click="searchLogs">
+            <el-icon><Search /></el-icon>查询
+          </el-button>
           <el-button @click="resetFilter">重置</el-button>
         </el-form-item>
       </el-form>
@@ -86,20 +94,24 @@
 
     <!-- 日志列表 -->
     <el-card>
-      <el-table :data="logList" stripe v-loading="loading"
+      <el-table 
+        :data="logList" 
+        stripe 
+        v-loading="loading"
         @row-click="showLogDetail"
+        row-class-name="log-row"
       >
         <el-table-column type="index" width="50" />
         
-        <el-table-column prop="createdAt" label="时间" width="160" sortable>
+        <el-table-column prop="created_at" label="时间" width="160" sortable>
           <template #default="{ row }">
-            {{ formatDate(row.createdAt) }}
+            {{ formatDate(row.created_at) }}
           </template>
         </el-table-column>
 
-        <el-table-column prop="type" label="类型" width="100">
+        <el-table-column prop="action_type" label="类型" width="100">
           <template #default="{ row }">
-            <el-tag :type="getLogType(row.type)">{{ getLogTypeText(row.type) }}</el-tag>
+            <el-tag :type="getLogType(row.action_type)">{{ getLogTypeText(row.action_type) }}</el-tag>
           </template>
         </el-table-column>
 
@@ -107,9 +119,9 @@
         
         <el-table-column prop="module" label="操作模块" width="120" />
 
-        <el-table-column prop="action" label="操作内容" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="description" label="操作内容" min-width="200" show-overflow-tooltip />
 
-        <el-table-column prop="ip" label="IP地址" width="130" />
+        <el-table-column prop="ip_address" label="IP地址" width="130" />
 
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">
@@ -119,7 +131,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="100">
+        <el-table-column label="操作" width="80" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click.stop="showLogDetail(row)">详情</el-button>
           </template>
@@ -145,26 +157,26 @@
       <div v-if="selectedLog" class="log-detail">
         <el-descriptions :column="1" border>
           <el-descriptions-item label="日志ID">{{ selectedLog.id }}</el-descriptions-item>
-          <el-descriptions-item label="操作时间">{{ formatDate(selectedLog.createdAt) }}</el-descriptions-item>
+          <el-descriptions-item label="操作时间">{{ formatDate(selectedLog.created_at) }}</el-descriptions-item>
           <el-descriptions-item label="操作用户">{{ selectedLog.username }}</el-descriptions-item>
-          <el-descriptions-item label="用户角色">{{ selectedLog.role }}</el-descriptions-item>
+          <el-descriptions-item label="用户角色">{{ selectedLog.role || '-' }}</el-descriptions-item>
           <el-descriptions-item label="操作类型">
-            <el-tag :type="getLogType(selectedLog.type)">{{ getLogTypeText(selectedLog.type) }}</el-tag>
+            <el-tag :type="getLogType(selectedLog.action_type)">{{ getLogTypeText(selectedLog.action_type) }}</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="操作模块">{{ selectedLog.module }}</el-descriptions-item>
-          <el-descriptions-item label="操作内容">{{ selectedLog.action }}</el-descriptions-item>
-          <el-descriptions-item label="IP地址">{{ selectedLog.ip }}</el-descriptions-item>
-          <el-descriptions-item label="浏览器">{{ selectedLog.userAgent }}</el-descriptions-item>
+          <el-descriptions-item label="操作内容">{{ selectedLog.description }}</el-descriptions-item>
+          <el-descriptions-item label="IP地址">{{ selectedLog.ip_address }}</el-descriptions-item>
+          <el-descriptions-item label="User-Agent">{{ selectedLog.user_agent || '-' }}</el-descriptions-item>
           <el-descriptions-item label="请求参数">
-            <pre>{{ JSON.stringify(selectedLog.params, null, 2) }}</pre>
+            <pre>{{ formatJson(selectedLog.request_params) }}</pre>
           </el-descriptions-item>
           <el-descriptions-item label="执行状态">
             <el-tag :type="selectedLog.status === 'success' ? 'success' : 'danger'">
               {{ selectedLog.status === 'success' ? '成功' : '失败' }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item v-if="selectedLog.error" label="错误信息">
-            <div class="error-message">{{ selectedLog.error }}</div>
+          <el-descriptions-item v-if="selectedLog.error_message" label="错误信息">
+            <div class="error-message">{{ selectedLog.error_message }}</div>
           </el-descriptions-item>
         </el-descriptions>
       </div>
@@ -173,101 +185,81 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Download, Search } from '@element-plus/icons-vue'
+import api from '@/api'
 
 const loading = ref(false)
 const detailVisible = ref(false)
 const selectedLog = ref<any>(null)
+const hasPermission = ref(true) // 可根据权限调整
 
 const stats = ref({
-  todayCount: 156,
-  loginCount: 23,
-  errorCount: 2,
-  totalCount: 12580
+  todayCount: 0,
+  loginCount: 0,
+  errorCount: 0,
+  totalCount: 0
 })
 
 const filterForm = reactive({
   type: '',
   username: '',
-  dateRange: []
+  keyword: '',
+  dateRange: [] as string[]
 })
 
 const pagination = reactive({
   page: 1,
   pageSize: 20,
-  total: 12580
+  total: 0
 })
 
-const logList = ref([
-  {
-    id: 'log_001',
-    createdAt: '2024-03-08 14:30:25',
-    type: 'login',
-    username: 'admin',
-    role: '管理员',
-    module: '系统',
-    action: '用户登录',
-    ip: '192.168.1.100',
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    params: { username: 'admin' },
-    status: 'success'
-  },
-  {
-    id: 'log_002',
-    createdAt: '2024-03-08 14:25:10',
-    type: 'create',
-    username: 'zhangsan',
-    role: '会计',
-    module: '票据管理',
-    action: '创建票据',
-    ip: '192.168.1.105',
-    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
-    params: { invoice_no: '00123456', amount: 15000 },
-    status: 'success'
-  },
-  {
-    id: 'log_003',
-    createdAt: '2024-03-08 14:20:00',
-    type: 'audit',
-    username: 'lisi',
-    role: '审计员',
-    module: '审核工作台',
-    action: '审核通过凭证 #V202403001',
-    ip: '192.168.1.108',
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-    params: { voucher_id: 'V202403001', result: 'approved' },
-    status: 'success'
-  },
-  {
-    id: 'log_004',
-    createdAt: '2024-03-08 14:15:30',
-    type: 'update',
-    username: 'wangwu',
-    role: '会计',
-    module: '客户管理',
-    action: '修改客户信息',
-    ip: '192.168.1.110',
-    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
-    params: { customer_id: 'C001', fields: ['phone', 'address'] },
-    status: 'success'
-  },
-  {
-    id: 'log_005',
-    createdAt: '2024-03-08 14:10:15',
-    type: 'delete',
-    username: 'admin',
-    role: '管理员',
-    module: '系统管理',
-    action: '删除用户',
-    ip: '192.168.1.100',
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-    params: { user_id: 'U123' },
-    status: 'error',
-    error: '无法删除，该用户有关联数据'
+const logList = ref<any[]>([])
+
+// 获取日志列表
+const fetchLogs = async () => {
+  loading.value = true
+  try {
+    const params: any = {
+      page: pagination.page,
+      page_size: pagination.pageSize
+    }
+    
+    if (filterForm.type) params.action = filterForm.type
+    if (filterForm.username) params.user_id = filterForm.username
+    if (filterForm.dateRange?.length === 2) {
+      params.start_date = filterForm.dateRange[0]
+      params.end_date = filterForm.dateRange[1]
+    }
+    
+    const res = await api.get('/sys/logs', { params })
+    logList.value = res.data.items || []
+    pagination.total = res.data.total || 0
+    
+    // 更新统计
+    if (res.data.stats) {
+      stats.value = res.data.stats
+    }
+  } catch (error) {
+    console.error('获取日志列表失败', error)
+    ElMessage.error('获取日志失败')
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// 获取统计信息
+const fetchStats = async () => {
+  try {
+    const res = await api.get('/system/logs/stats')
+    if (res.data) {
+      stats.value = res.data
+    }
+  } catch (error) {
+    console.error('获取统计失败', error)
+  }
+}
 
 const getLogType = (type: string) => {
   const map: Record<string, string> = {
@@ -295,31 +287,42 @@ const getLogTypeText = (type: string) => {
   return map[type] || type
 }
 
-const formatDate = (date: string) => {
-  return date
+const formatDate = (date: string | undefined) => {
+  if (!date) return '-'
+  return date.replace('T', ' ').substring(0, 19)
+}
+
+const formatJson = (data: any) => {
+  if (!data) return '-'
+  try {
+    return typeof data === 'string' ? JSON.stringify(JSON.parse(data), null, 2) : JSON.stringify(data, null, 2)
+  } catch {
+    return data
+  }
 }
 
 const searchLogs = () => {
-  loading.value = true
-  setTimeout(() => {
-    loading.value = false
-    ElMessage.success('查询完成')
-  }, 500)
+  pagination.page = 1
+  fetchLogs()
 }
 
 const resetFilter = () => {
   filterForm.type = ''
   filterForm.username = ''
+  filterForm.keyword = ''
   filterForm.dateRange = []
+  pagination.page = 1
+  fetchLogs()
 }
 
 const handleSizeChange = (val: number) => {
   pagination.pageSize = val
-  searchLogs()
+  fetchLogs()
 }
 
 const handlePageChange = (val: number) => {
   pagination.page = val
+  fetchLogs()
 }
 
 const showLogDetail = (row: any) => {
@@ -331,17 +334,50 @@ const clearLogs = () => {
   ElMessageBox.confirm(
     '确定要清空所有操作日志吗？此操作不可恢复！',
     '警告',
-    { type: 'warning', confirmButtonText: '确定清空' }
-  ).then(() => {
-    logList.value = []
-    stats.value.totalCount = 0
-    ElMessage.success('日志已清空')
-  })
+    { type: 'warning', confirmButtonText: '确定清空', cancelButtonText: '取消' }
+  ).then(async () => {
+    try {
+      await api.delete('/system/logs/clear')
+      ElMessage.success('日志已清空')
+      fetchLogs()
+      fetchStats()
+    } catch (error) {
+      ElMessage.error('清空失败')
+    }
+  }).catch(() => {})
 }
 
 const exportLogs = () => {
-  ElMessage.success('日志导出成功')
+  if (logList.value.length === 0) {
+    ElMessage.warning('没有可导出的数据')
+    return
+  }
+  
+  const headers = ['时间', '类型', '用户', '模块', '操作内容', 'IP地址', '状态']
+  const rows = logList.value.map(log => [
+    formatDate(log.created_at),
+    getLogTypeText(log.action_type),
+    log.username,
+    log.module,
+    log.description,
+    log.ip_address,
+    log.status === 'success' ? '成功' : '失败'
+  ])
+  
+  const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n')
+  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = `操作日志_${new Date().toISOString().slice(0, 10)}.csv`
+  link.click()
+  
+  ElMessage.success('导出成功')
 }
+
+onMounted(() => {
+  fetchLogs()
+  fetchStats()
+})
 </script>
 
 <style scoped>
@@ -400,5 +436,13 @@ const exportLogs = () => {
   padding: 10px;
   background: #fef0f0;
   border-radius: 4px;
+}
+
+.log-row {
+  cursor: pointer;
+}
+
+.log-row:hover {
+  background-color: #f5f7fa;
 }
 </style>

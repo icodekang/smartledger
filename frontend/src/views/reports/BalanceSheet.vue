@@ -3,244 +3,254 @@
     <div class="page-header">
       <h2>资产负债表</h2>
       <div class="header-actions">
-        <el-select v-model="selectedPeriod" placeholder="选择账期">
-          <el-option v-for="item in periods" :key="item.value" :label="item.label" :value="item.value" />
+        <el-select v-model="selectedCustomerId" placeholder="选择客户" style="width: 200px">
+          <el-option v-for="c in customers" :key="c.id" :label="c.name" :value="c.id" />
         </el-select>
-        <el-button type="primary" @click="exportReport">
+        <el-date-picker
+          v-model="selectedPeriod"
+          type="month"
+          placeholder="选择月份"
+          value-format="YYYY-MM"
+          style="width: 150px"
+        />
+        <el-button type="primary" @click="fetchData">
+          <el-icon><Search /></el-icon>查询
+        </el-button>
+        <el-button type="success" @click="exportReport">
           <el-icon><Download /></el-icon>导出
         </el-button>
       </div>
     </div>
 
-    <!-- 表头信息 -->
-    <div class="report-header">
-      <h3>资产负债表</h3>
-      <p>账期: {{ selectedPeriod }} | 单位: 元</p>
+    <div v-loading="loading">
+      <!-- 表头信息 -->
+      <div class="report-header">
+        <h3>资产负债表</h3>
+        <p>{{ selectedCustomerName }} | 账期: {{ selectedPeriod }} | 单位: 元</p>
+      </div>
+
+      <!-- 平衡校验 -->
+      <el-alert
+        v-if="balanceData"
+        :title="balanceData.balance_check ? '✓ 借贷平衡' : '✗ 借贷不平衡'"
+        :type="balanceData.balance_check ? 'success' : 'error'"
+        :closable="false"
+        show-icon
+        style="margin-bottom: 20px"
+      />
+
+      <!-- 资产 -->
+      <el-card class="section">
+        <template #header>
+          <span class="section-title">一、资产 (合计: {{ formatAmount(balanceData?.assets?.total) }})</span>
+        </template>
+        
+        <!-- 流动资产 -->
+        <div class="subsection">
+          <div class="subsection-title">流动资产</div>
+          <el-table :data="currentAssets" :show-header="false" stripe>
+            <el-table-column prop="subject_name" label="项目" />
+            <el-table-column prop="balance" label="期末余额" width="150" align="right">
+              <template #default="{ row }">
+                {{ formatAmount(row.balance) }}
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+
+        <!-- 非流动资产 -->
+        <div class="subsection">
+          <div class="subsection-title">非流动资产</div>
+          <el-table :data="nonCurrentAssets" :show-header="false" stripe>
+            <el-table-column prop="subject_name" label="项目" />
+            <el-table-column prop="balance" label="期末余额" width="150" align="right">
+              <template #default="{ row }">
+                {{ formatAmount(row.balance) }}
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+
+        <!-- 资产总计 -->
+        <div class="grand-total">
+          <span>资产总计</span>
+          <span>{{ formatAmount(balanceData?.assets?.total) }}</span>
+        </div>
+      </el-card>
+
+      <!-- 负债 -->
+      <el-card class="section">
+        <template #header>
+          <span class="section-title">二、负债 (合计: {{ formatAmount(balanceData?.liabilities?.total) }})</span>
+        </template>
+
+        <el-table :data="liabilities" :show-header="false" stripe>
+          <el-table-column prop="subject_name" label="项目" />
+          <el-table-column prop="balance" label="期末余额" width="150" align="right">
+            <template #default="{ row }">{{ formatAmount(Math.abs(row.balance)) }}</template>
+          </el-table-column>
+        </el-table>
+
+        <div class="grand-total">
+          <span>负债合计</span>
+          <span>{{ formatAmount(balanceData?.liabilities?.total) }}</span>
+        </div>
+      </el-card>
+
+      <!-- 所有者权益 -->
+      <el-card class="section">
+        <template #header>
+          <span class="section-title">三、所有者权益 (合计: {{ formatAmount(balanceData?.equity?.total) }})</span>
+        </template>
+
+        <el-table :data="equity" :show-header="false" stripe>
+          <el-table-column prop="subject_name" label="项目" />
+          <el-table-column prop="balance" label="期末余额" width="150" align="right">
+            <template #default="{ row }">{{ formatAmount(row.balance) }}</template>
+          </el-table-column>
+        </el-table>
+
+        <div class="grand-total">
+          <span>所有者权益合计</span>
+          <span>{{ formatAmount(balanceData?.equity?.total) }}</span>
+        </div>
+      </el-card>
+
+      <!-- 空状态 -->
+      <el-empty v-if="!loading && !balanceData" description="请选择客户和账期查询数据" />
     </div>
-
-    <!-- 资产 -->
-    <el-card class="section">
-      <template #header>
-        <span class="section-title">一、资产</span>
-      </template>
-      
-      <!-- 流动资产 -->
-      <div class="subsection">
-        <div class="subsection-title">流动资产</div>
-        <el-table :data="currentAssets" :show-header="false" stripe>
-          <el-table-column prop="name" label="项目" />
-          <el-table-column prop="endAmount" label="期末余额" width="150" align="right">
-            <template #default="{ row }">
-              {{ formatAmount(row.endAmount) }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="startAmount" label="年初余额" width="150" align="right">
-            <template #default="{ row }">
-              {{ formatAmount(row.startAmount) }}
-            </template>
-          </el-table-column>
-        </el-table>
-        <div class="total-row">
-          <span>流动资产合计</span>
-          <span>{{ formatAmount(currentAssetsTotal.end) }}</span>
-          <span>{{ formatAmount(currentAssetsTotal.start) }}</span>
-        </div>
-      </div>
-
-      <!-- 非流动资产 -->
-      <div class="subsection">
-        <div class="subsection-title">非流动资产</div>
-        <el-table :data="nonCurrentAssets" :show-header="false" stripe>
-          <el-table-column prop="name" label="项目" />
-          <el-table-column prop="endAmount" label="期末余额" width="150" align="right">
-            <template #default="{ row }">
-              {{ formatAmount(row.endAmount) }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="startAmount" label="年初余额" width="150" align="right">
-            <template #default="{ row }">
-              {{ formatAmount(row.startAmount) }}
-            </template>
-          </el-table-column>
-        </el-table>
-        <div class="total-row">
-          <span>非流动资产合计</span>
-          <span>{{ formatAmount(nonCurrentAssetsTotal.end) }}</span>
-          <span>{{ formatAmount(nonCurrentAssetsTotal.start) }}</span>
-        </div>
-      </div>
-
-      <!-- 资产总计 -->
-      <div class="grand-total">
-        <span>资产总计</span>
-        <span>{{ formatAmount(totalAssets.end) }}</span>
-        <span>{{ formatAmount(totalAssets.start) }}</span>
-      </div>
-    </el-card>
-
-    <!-- 负债 -->
-    <el-card class="section">
-      <template #header>
-        <span class="section-title">二、负债</span>
-      </template>
-
-      <!-- 流动负债 -->
-      <div class="subsection">
-        <div class="subsection-title">流动负债</div>
-        <el-table :data="currentLiabilities" :show-header="false" stripe>
-          <el-table-column prop="name" label="项目" />
-          <el-table-column prop="endAmount" label="期末余额" width="150" align="right">
-            <template #default="{ row }">{{ formatAmount(row.endAmount) }}</template>
-          </el-table-column>
-          <el-table-column prop="startAmount" label="年初余额" width="150" align="right">
-            <template #default="{ row }">{{ formatAmount(row.startAmount) }}</template>
-          </el-table-column>
-        </el-table>
-        <div class="total-row">
-          <span>流动负债合计</span>
-          <span>{{ formatAmount(currentLiabilitiesTotal.end) }}</span>
-          <span>{{ formatAmount(currentLiabilitiesTotal.start) }}</span>
-        </div>
-      </div>
-
-      <div class="grand-total">
-        <span>负债合计</span>
-        <span>{{ formatAmount(totalLiabilities.end) }}</span>
-        <span>{{ formatAmount(totalLiabilities.start) }}</span>
-      </div>
-    </el-card>
-
-    <!-- 所有者权益 -->
-    <el-card class="section">
-      <template #header>
-        <span class="section-title">三、所有者权益</span>
-      </template>
-
-      <el-table :data="equity" :show-header="false" stripe>
-        <el-table-column prop="name" label="项目" />
-        <el-table-column prop="endAmount" label="期末余额" width="150" align="right">
-          <template #default="{ row }">{{ formatAmount(row.endAmount) }}</template>
-        </el-table-column>
-        <el-table-column prop="startAmount" label="年初余额" width="150" align="right">
-          <template #default="{ row }">{{ formatAmount(row.startAmount) }}</template>
-        </el-table-column>
-      </el-table>
-
-      <div class="grand-total">
-        <span>所有者权益合计</span>
-        <span>{{ formatAmount(totalEquity.end) }}</span>
-        <span>{{ formatAmount(totalEquity.start) }}</span>
-      </div>
-    </el-card>
-
-    <!-- 校验 -->
-    <el-card class="check-section">
-      <template #header>
-        <span>平衡校验</span>
-      </template>
-      <div class="check-result">
-        <el-result 
-          :icon="isBalanced ? 'success' : 'error'"
-          :title="isBalanced ? '试算平衡' : '试算不平衡'"
-          :sub-title="checkMessage"
-        />
-      </div>
-    </el-card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Download } from '@element-plus/icons-vue'
-import api from '@/api'
+import { Search, Download } from '@element-plus/icons-vue'
+import { reportApi } from '@/api/report'
+import { customerApi } from '@/api/customer'
 
-const selectedPeriod = ref('2024-03')
-const periods = ref([
-  { label: '2024年3月', value: '2024-03' },
-  { label: '2024年2月', value: '2024-02' },
-  { label: '2024年1月', value: '2024-01' }
-])
+const loading = ref(false)
+const selectedCustomerId = ref('')
+const selectedPeriod = ref(new Date().toISOString().slice(0, 7))
+const customers = ref<any[]>([])
+const balanceData = ref<any>(null)
 
-// 流动资产
-const currentAssets = ref([
-  { name: '货币资金', endAmount: 528000, startAmount: 480000 },
-  { name: '应收账款', endAmount: 156000, startAmount: 120000 },
-  { name: '预付账款', endAmount: 32000, startAmount: 28000 },
-  { name: '存货', endAmount: 89000, startAmount: 95000 }
-])
+const selectedCustomerName = computed(() => {
+  const customer = customers.value.find(c => c.id === selectedCustomerId.value)
+  return customer?.name || ''
+})
 
-const currentAssetsTotal = computed(() => ({
-  end: currentAssets.value.reduce((sum, item) => sum + item.endAmount, 0),
-  start: currentAssets.value.reduce((sum, item) => sum + item.startAmount, 0)
-}))
+// 流动资产（科目代码以1开头，且为流动资产）
+const currentAssets = computed(() => {
+  if (!balanceData.value?.assets?.items) return []
+  return balanceData.value.assets.items.filter((item: any) => {
+    const code = item.subject_code
+    // 1001-1003 货币资金, 1121-1231 应收款项, 1401-1408 存货等流动资产
+    return code.startsWith('1001') || code.startsWith('1002') || 
+           code.startsWith('112') || code.startsWith('122') ||
+           code.startsWith('123') || code.startsWith('140')
+  })
+})
 
-// 非流动资产
-const nonCurrentAssets = ref([
-  { name: '固定资产', endAmount: 320000, startAmount: 350000 },
-  { name: '无形资产', endAmount: 80000, startAmount: 85000 },
-  { name: '长期待摊费用', endAmount: 15000, startAmount: 20000 }
-])
+// 非流动资产（固定资产、无形资产等）
+const nonCurrentAssets = computed(() => {
+  if (!balanceData.value?.assets?.items) return []
+  return balanceData.value.assets.items.filter((item: any) => {
+    const code = item.subject_code
+    return code.startsWith('150') || code.startsWith('160') || 
+           code.startsWith('170') || code.startsWith('180') ||
+           code.startsWith('190')
+  })
+})
 
-const nonCurrentAssetsTotal = computed(() => ({
-  end: nonCurrentAssets.value.reduce((sum, item) => sum + item.endAmount, 0),
-  start: nonCurrentAssets.value.reduce((sum, item) => sum + item.startAmount, 0)
-}))
-
-const totalAssets = computed(() => ({
-  end: currentAssetsTotal.value.end + nonCurrentAssetsTotal.value.end,
-  start: currentAssetsTotal.value.start + nonCurrentAssetsTotal.value.start
-}))
-
-// 流动负债
-const currentLiabilities = ref([
-  { name: '应付账款', endAmount: 98000, startAmount: 85000 },
-  { name: '预收账款', endAmount: 45000, startAmount: 42000 },
-  { name: '应付职工薪酬', endAmount: 32000, startAmount: 30000 },
-  { name: '应交税费', endAmount: 28000, startAmount: 25000 }
-])
-
-const currentLiabilitiesTotal = computed(() => ({
-  end: currentLiabilities.value.reduce((sum, item) => sum + item.endAmount, 0),
-  start: currentLiabilities.value.reduce((sum, item) => sum + item.startAmount, 0)
-}))
-
-const totalLiabilities = computed(() => currentLiabilitiesTotal.value)
+// 负债
+const liabilities = computed(() => {
+  return balanceData.value?.liabilities?.items || []
+})
 
 // 所有者权益
-const equity = ref([
-  { name: '实收资本', endAmount: 500000, startAmount: 500000 },
-  { name: '资本公积', endAmount: 50000, startAmount: 50000 },
-  { name: '盈余公积', endAmount: 35000, startAmount: 28000 },
-  { name: '未分配利润', endAmount: 390000, startAmount: 315000 }
-])
-
-const totalEquity = computed(() => ({
-  end: equity.value.reduce((sum, item) => sum + item.endAmount, 0),
-  start: equity.value.reduce((sum, item) => sum + item.startAmount, 0)
-}))
-
-// 平衡校验
-const isBalanced = computed(() => {
-  return totalAssets.value.end === (totalLiabilities.value.end + totalEquity.value.end)
+const equity = computed(() => {
+  return balanceData.value?.equity?.items || []
 })
 
-const checkMessage = computed(() => {
-  if (isBalanced.value) {
-    return `资产 = 负债 + 所有者权益 = ${formatAmount(totalAssets.value.end)}`
-  } else {
-    const diff = totalAssets.value.end - (totalLiabilities.value.end + totalEquity.value.end)
-    return `差额: ${formatAmount(diff)}`
+const fetchCustomers = async () => {
+  try {
+    const res = await customerApi.getList({ page_size: 1000 })
+    customers.value = res.data.items || []
+    if (customers.value.length > 0) {
+      selectedCustomerId.value = customers.value[0].id
+      fetchData()
+    }
+  } catch (error) {
+    console.error('获取客户列表失败', error)
   }
-})
+}
 
-const formatAmount = (amount: number) => {
+const fetchData = async () => {
+  if (!selectedCustomerId.value || !selectedPeriod.value) {
+    ElMessage.warning('请选择客户和账期')
+    return
+  }
+  
+  loading.value = true
+  try {
+    const res = await reportApi.getBalanceSheet(selectedCustomerId.value, selectedPeriod.value)
+    balanceData.value = res.data
+  } catch (error) {
+    console.error('获取资产负债表失败', error)
+    ElMessage.error('获取数据失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+const formatAmount = (amount: number | undefined) => {
+  if (amount === undefined || amount === null) return '¥0.00'
   return '¥' + amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 const exportReport = () => {
-  ElMessage.success('报表导出成功')
+  if (!balanceData.value) {
+    ElMessage.warning('请先查询数据')
+    return
+  }
+  
+  // 导出为CSV
+  const headers = ['科目代码', '科目名称', '期末余额']
+  const rows: string[][] = []
+  
+  // 资产
+  rows.push(['一、资产', '', ''])
+  balanceData.value.assets?.items?.forEach((item: any) => {
+    rows.push([item.subject_code, item.subject_name, item.balance.toFixed(2)])
+  })
+  rows.push(['', '资产合计', balanceData.value.assets?.total?.toFixed(2) || '0.00'])
+  
+  // 负债
+  rows.push(['二、负债', '', ''])
+  balanceData.value.liabilities?.items?.forEach((item: any) => {
+    rows.push([item.subject_code, item.subject_name, Math.abs(item.balance).toFixed(2)])
+  })
+  rows.push(['', '负债合计', balanceData.value.liabilities?.total?.toFixed(2) || '0.00'])
+  
+  // 所有者权益
+  rows.push(['三、所有者权益', '', ''])
+  balanceData.value.equity?.items?.forEach((item: any) => {
+    rows.push([item.subject_code, item.subject_name, item.balance.toFixed(2)])
+  })
+  rows.push(['', '权益合计', balanceData.value.equity?.total?.toFixed(2) || '0.00'])
+  
+  const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n')
+  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = `资产负债表_${selectedPeriod.value}.csv`
+  link.click()
+  
+  ElMessage.success('导出成功')
 }
+
+onMounted(fetchCustomers)
 </script>
 
 <style scoped>
@@ -300,24 +310,6 @@ const exportReport = () => {
   margin-bottom: 10px;
 }
 
-.total-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px 20px;
-  background: #ecf5ff;
-  font-weight: bold;
-  margin-top: 10px;
-}
-
-.total-row span:first-child {
-  flex: 1;
-}
-
-.total-row span:not(:first-child) {
-  width: 150px;
-  text-align: right;
-}
-
 .grand-total {
   display: flex;
   justify-content: space-between;
@@ -337,13 +329,5 @@ const exportReport = () => {
 .grand-total span:not(:first-child) {
   width: 150px;
   text-align: right;
-}
-
-.check-section {
-  margin-top: 20px;
-}
-
-.check-result {
-  padding: 20px;
 }
 </style>

@@ -99,6 +99,26 @@ const router = createRouter({
           path: 'system/settings',
           name: 'SystemSettings',
           component: () => import('@/views/system/settings.vue')
+        },
+        {
+          path: 'system/tenants',
+          name: 'SystemTenants',
+          component: () => import('@/views/system/Tenants.vue')
+        },
+        {
+          path: 'system/backup',
+          name: 'SystemBackup',
+          component: () => import('@/views/system/Backup.vue')
+        },
+        {
+          path: 'system/scheduler',
+          name: 'SystemScheduler',
+          component: () => import('@/views/system/Scheduler.vue')
+        },
+        {
+          path: 'notifications',
+          name: 'Notifications',
+          component: () => import('@/views/notifications/Index.vue')
         }
       ]
     }

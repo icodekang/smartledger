@@ -68,7 +68,15 @@
           <el-menu-item index="/system/roles">角色权限</el-menu-item>
           <el-menu-item index="/system/logs">操作日志</el-menu-item>
           <el-menu-item index="/system/settings">系统配置</el-menu-item>
+          <el-menu-item index="/system/tenants">租户管理</el-menu-item>
+          <el-menu-item index="/system/backup">数据备份</el-menu-item>
+          <el-menu-item index="/system/scheduler">定时任务</el-menu-item>
         </el-sub-menu>
+
+        <el-menu-item index="/notifications">
+          <el-icon><Bell /></el-icon>
+          <span>通知中心</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     
@@ -100,7 +108,7 @@
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '../stores/auth'
-import { HomeFilled, Document, Tickets, Money, Checked, User, TrendCharts, Setting, ArrowDown } from '@element-plus/icons-vue'
+import { HomeFilled, Document, Tickets, Money, Checked, User, TrendCharts, Setting, ArrowDown, Bell } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const authStore = useAuthStore()

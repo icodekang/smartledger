@@ -2,7 +2,7 @@
   <div class="system-settings">
     <div class="page-header">
       <h2>系统参数配置</h2>
-      <el-button type="primary" @click="saveSettings">
+      <el-button type="primary" @click="saveSettings" :loading="saving">
         <el-icon><Check /></el-icon>保存配置
       </el-button>
     </div>
@@ -21,6 +21,7 @@
               action="#"
               :auto-upload="false"
               :show-file-list="false"
+              :on-change="handleLogoChange"
             >
               <img v-if="settings.basic.logo" :src="settings.basic.logo" class="logo-preview" />
               <el-icon v-else class="logo-uploader-icon"><Plus /></el-icon>
@@ -86,7 +87,7 @@
           </el-form-item>
 
           <el-form-item>
-            <el-button type="primary" @click="testEmail">测试邮件发送</el-button>
+            <el-button type="primary" @click="testEmail" :loading="testingEmail">测试邮件发送</el-button>
           </el-form-item>
         </el-form>
       </el-tab-pane>
@@ -166,22 +167,24 @@
           </el-form-item>
 
           <el-form-item v-if="settings.backup.storageType === 's3'" label="S3配置">
-            <el-form-item label="Endpoint">
-              <el-input v-model="settings.backup.s3Endpoint" placeholder="https://s3.amazonaws.com" />
-            </el-form-item>
-            <el-form-item label="Bucket">
-              <el-input v-model="settings.backup.s3Bucket" />
-            </el-form-item>
-            <el-form-item label="Access Key">
-              <el-input v-model="settings.backup.s3AccessKey" />
-            </el-form-item>
-            <el-form-item label="Secret Key">
-              <el-input v-model="settings.backup.s3SecretKey" type="password" />
-            </el-form-item>
+            <div class="s3-config">
+              <el-form-item label="Endpoint">
+                <el-input v-model="settings.backup.s3Endpoint" placeholder="https://s3.amazonaws.com" />
+              </el-form-item>
+              <el-form-item label="Bucket">
+                <el-input v-model="settings.backup.s3Bucket" />
+              </el-form-item>
+              <el-form-item label="Access Key">
+                <el-input v-model="settings.backup.s3AccessKey" />
+              </el-form-item>
+              <el-form-item label="Secret Key">
+                <el-input v-model="settings.backup.s3SecretKey" type="password" />
+              </el-form-item>
+            </div>
           </el-form-item>
 
           <el-form-item>
-            <el-button type="primary" @click="manualBackup">立即备份</el-button>
+            <el-button type="primary" @click="manualBackup" :loading="backingUp">立即备份</el-button>
             <el-button @click="showBackupHistory">备份历史</el-button>
           </el-form-item>
         </el-form>
@@ -192,28 +195,28 @@
         <div class="about-section">
           <div class="logo-large">SmartLedger</div>
           <div class="version-info">
-            <p><strong>版本号:</strong> v2.1.0</p>
-            <p><strong>构建时间:</strong> 2024-03-08 10:30:00</p>
-            <p><strong>Git Commit:</strong> 1749298</p>
-            <p><strong>运行环境:</strong> Node.js 18.x + PostgreSQL 15</p>
+            <p><strong>版本号:</strong> {{ systemInfo.version }}</p>
+            <p><strong>构建时间:</strong> {{ systemInfo.buildTime }}</p>
+            <p><strong>Git Commit:</strong> {{ systemInfo.gitCommit }}</p>
+            <p><strong>运行环境:</strong> {{ systemInfo.runtime }}</p>
           </div>
 
           <el-divider />
 
           <div class="license-info">
             <h4>授权信息</h4>
-            <p><strong>授权类型:</strong> 企业版</p>
-            <p><strong>授权到期:</strong> 2025-03-08</p>
-            <p><strong>授权用户数:</strong> 50人</p>
+            <p><strong>授权类型:</strong> {{ systemInfo.licenseType }}</p>
+            <p><strong>授权到期:</strong> {{ systemInfo.licenseExpire }}</p>
+            <p><strong>授权用户数:</strong> {{ systemInfo.licenseUsers }}人</p>
           </div>
 
           <el-divider />
 
           <div class="contact-info">
             <h4>技术支持</h4>
-            <p>官方网址: https://smartledger.example.com</p>
-            <p>技术支持: support@smartledger.example.com</p>
-            <p>客服热线: 400-888-8888</p>
+            <p>官方网址: {{ systemInfo.website }}</p>
+            <p>技术支持: {{ systemInfo.supportEmail }}</p>
+            <p>客服热线: {{ systemInfo.hotline }}</p>
           </div>
         </div>
       </el-tab-pane>
@@ -222,11 +225,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Check, Plus } from '@element-plus/icons-vue'
+import api from '@/api'
 
 const activeTab = ref('basic')
+const saving = ref(false)
+const testingEmail = ref(false)
+const backingUp = ref(false)
 
 const settings = reactive({
   basic: {
@@ -268,21 +275,114 @@ const settings = reactive({
   }
 })
 
-const saveSettings = () => {
-  ElMessage.success('配置保存成功')
+const systemInfo = reactive({
+  version: 'v2.1.0',
+  buildTime: '2024-03-08 10:30:00',
+  gitCommit: '1749298',
+  runtime: 'Node.js 18.x + PostgreSQL 15',
+  licenseType: '企业版',
+  licenseExpire: '2025-03-08',
+  licenseUsers: 50,
+  website: 'https://smartledger.example.com',
+  supportEmail: 'support@smartledger.example.com',
+  hotline: '400-888-8888'
+})
+
+// 加载设置
+const loadSettings = async () => {
+  try {
+    const res = await api.get('/sys/config')
+    if (res.data) {
+      // 映射配置到表单
+      if (res.data.system_name) settings.basic.systemName = res.data.system_name
+      if (res.data.company_name) settings.basic.companyName = res.data.company_name
+      if (res.data.logo_url) settings.basic.logo = res.data.logo_url
+      if (res.data.copyright) settings.basic.copyright = res.data.copyright
+      if (res.data.icp) settings.basic.icp = res.data.icp
+      if (res.data.theme_color) settings.basic.themeColor = res.data.theme_color
+      if (res.data.session_timeout) settings.security.sessionTimeout = res.data.session_timeout
+      if (res.data.enable_register !== undefined) settings.basic.enableRegister = res.data.enable_register
+    }
+  } catch (error) {
+    console.error('加载设置失败', error)
+  }
 }
 
-const testEmail = () => {
-  ElMessage.success('测试邮件已发送，请查收')
+// 保存设置
+const saveSettings = async () => {
+  saving.value = true
+  try {
+    const configData = {
+      system_name: settings.basic.systemName,
+      company_name: settings.basic.companyName,
+      logo_url: settings.basic.logo,
+      copyright: settings.basic.copyright,
+      icp: settings.basic.icp,
+      theme_color: settings.basic.themeColor,
+      session_timeout: settings.security.sessionTimeout,
+      enable_register: settings.basic.enableRegister
+    }
+    await api.put('/sys/config', configData)
+    ElMessage.success('配置保存成功')
+  } catch (error) {
+    ElMessage.error('保存失败')
+  } finally {
+    saving.value = false
+  }
 }
 
-const manualBackup = () => {
-  ElMessage.success('备份任务已启动')
+// 测试邮件
+const testEmail = async () => {
+  testingEmail.value = true
+  try {
+    await api.post('/sys/config/test-email', {
+      smtp_host: settings.email.smtpHost,
+      smtp_port: settings.email.smtpPort,
+      from_email: settings.email.fromEmail,
+      smtp_user: settings.email.smtpUser,
+      smtp_password: settings.email.smtpPassword,
+      use_ssl: settings.email.useSsl
+    })
+    ElMessage.success('测试邮件已发送，请查收')
+  } catch (error) {
+    ElMessage.error('邮件发送失败')
+  } finally {
+    testingEmail.value = false
+  }
 }
 
+// 手动备份
+const manualBackup = async () => {
+  backingUp.value = true
+  try {
+    await api.post('/sys/backup/manual')
+    ElMessage.success('备份任务已启动，请在备份历史中查看进度')
+  } catch (error) {
+    ElMessage.error('备份启动失败')
+  } finally {
+    backingUp.value = false
+  }
+}
+
+// 查看备份历史
 const showBackupHistory = () => {
-  ElMessage.info('备份历史功能开发中')
+  ElMessageBox.alert(
+    '备份历史功能正在开发中，敬请期待！',
+    '提示',
+    { type: 'info' }
+  )
 }
+
+// 处理Logo上传
+const handleLogoChange = (file: any) => {
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    settings.basic.logo = e.target?.result as string
+  }
+  reader.readAsDataURL(file.raw)
+}
+
+onMounted(loadSettings)
 </script>
 
 <style scoped>
@@ -335,6 +435,10 @@ const showBackupHistory = () => {
   margin-left: 10px;
   color: #909399;
   font-size: 13px;
+}
+
+.s3-config {
+  width: 100%;
 }
 
 .about-section {
