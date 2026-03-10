@@ -200,7 +200,8 @@ const handleMarkAllRead = async () => {
   try {
     await ElMessageBox.confirm('确定将所有通知标记为已读吗？', '确认', { type: 'info' })
     await notificationApi.markAllRead()
-    notifications.value.forEach((item: any) => item.is_read = true)
+    // 使用 map 创建新数组以保持响应式
+    notifications.value = notifications.value.map((item: any) => ({ ...item, is_read: true }))
     ElMessage.success('全部已读')
   } catch {}
 }

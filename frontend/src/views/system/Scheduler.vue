@@ -74,7 +74,7 @@
 
     <!-- 任务编辑对话框 -->
     <el-dialog v-model="showTaskDialog" :title="isCreateTask ? '新建定时任务' : '编辑定时任务'" width="550px">
-      <el-form :model="taskForm" label-width="100px">
+      <el-form :model="taskForm" :rules="formRules" label-width="100px">
         <el-form-item label="任务名称" required>
           <el-input v-model="taskForm.name" placeholder="请输入任务名称" />
         </el-form-item>
@@ -147,6 +147,26 @@ const taskForm = ref({
   status: true
 })
 const currentTaskId = ref('')
+
+// 表单验证规则
+const validateCron = (_rule: any, value: string, callback: any) => {
+  if (!value) {
+    callback(new Error('请输入Cron表达式'))
+    return
+  }
+  // 简单的 Cron 表达式格式验证 (分 时 日 月 周)
+  const cronRegex = /^(\*|([0-5]?\d(-[0-5]?\d)?)(,\s*(\*|([0-5]?\d(-[0-5]?\d)?)))*\s+(\*|([01]?\d|2[0-3])(-([01]?\d|2[0-3]))?)(,\s*(\*|([01]?\d|2[0-3])(-([01]?\d|2[0-3]))?))*\s+(\*|([1-9]|[12]\d|3[01])(-([1-9]|[12]\d|3[01]))?)(,\s*(\*|([1-9]|[12]\d|3[01])(-([1-9]|[12]\d|3[01]))?))*\s+(\*|([1-9]|1[0-2])(-([1-9]|1[0-2]))?)(,\s*(\*|([1-9]|1[0-2])(-([1-9]|1[0-2]))?))*\s+(\*|[0-7](-[0-7])?)(,\s*(\*|[0-7](-[0-7])?))*$/
+  if (!cronRegex.test(value)) {
+    callback(new Error('请输入有效的Cron表达式 (分 时 日 月 周)'))
+  } else {
+    callback()
+  }
+}
+
+const formRules = {
+  name: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
+  cron: [{ validator: validateCron, trigger: 'blur' }]
+}
 
 const cronExamples = ref([
   { expression: '0 * * * *', description: '每小时执行' },

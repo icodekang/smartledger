@@ -38,7 +38,7 @@
 
     <!-- 租户编辑对话框 -->
     <el-dialog v-model="showDialog" :title="isCreate ? '新建租户' : '编辑租户'" width="550px">
-      <el-form :model="form" label-width="80px">
+      <el-form :model="form" :rules="formRules" label-width="80px">
         <el-form-item label="租户名称" required>
           <el-input v-model="form.name" placeholder="请输入租户名称" />
         </el-form-item>
@@ -84,6 +84,20 @@ const form = ref({
   status: true
 })
 const currentTenantId = ref('')
+
+// 表单验证规则
+const validateDomain = (_rule: any, value: string, callback: any) => {
+  if (value && !/^[a-zA-Z0-9][-a-zA-Z0-9]*(\.[a-zA-Z0-9][-a-zA-Z0-9]*)+$/.test(value)) {
+    callback(new Error('请输入有效的域名格式'))
+  } else {
+    callback()
+  }
+}
+
+const formRules = {
+  name: [{ required: true, message: '请输入租户名称', trigger: 'blur' }],
+  domain: [{ validator: validateDomain, trigger: 'blur' }]
+}
 
 const fetchTenants = async () => {
   loading.value = true

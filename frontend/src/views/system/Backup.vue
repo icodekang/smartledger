@@ -64,7 +64,7 @@
 
     <!-- 备份任务编辑对话框 -->
     <el-dialog v-model="showTaskDialog" :title="isCreateTask ? '新建备份任务' : '编辑备份任务'" width="500px">
-      <el-form :model="taskForm" label-width="100px">
+      <el-form :model="taskForm" :rules="formRules" label-width="100px">
         <el-form-item label="任务名称" required>
           <el-input v-model="taskForm.name" placeholder="请输入任务名称" />
         </el-form-item>
@@ -118,6 +118,20 @@ const taskForm = ref({
   status: true
 })
 const currentTaskId = ref('')
+
+// 表单验证规则
+const validateSchedule = (_rule: any, value: string, callback: any) => {
+  if (value && !/^(\*|([0-5]?\d(-[0-5]?\d)?)(,\s*(\*|([0-5]?\d(-[0-5]?\d)?)))*)\s+(\*|([01]?\d|2[0-3])(-([01]?\d|2[0-3]))?)(,\s*(\*|([01]?\d|2[0-3])(-([01]?\d|2[0-3]))?))*\s+(\*|([1-9]|[12]\d|3[01])(-([1-9]|[12]\d|3[01]))?)(,\s*(\*|([1-9]|[12]\d|3[01])(-([1-9]|[12]\d|3[01]))?))*\s+(\*|([1-9]|1[0-2])(-([1-9]|1[0-2]))?)(,\s*(\*|([1-9]|1[0-2])(-([1-9]|1[0-2]))?))*\s+(\*|[0-7](-[0-7])?)(,\s*(\*|[0-7](-[0-7])?))*$/.test(value)) {
+    callback(new Error('请输入有效的Cron表达式'))
+  } else {
+    callback()
+  }
+}
+
+const formRules = {
+  name: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
+  schedule: [{ validator: validateSchedule, trigger: 'blur' }]
+}
 
 const fetchTasks = async () => {
   loading.value = true
