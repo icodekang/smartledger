@@ -31,7 +31,7 @@
             <span><el-icon><Key /></el-icon> {{ role.permissionCount }} 项权限</span>
           </div>
 
-          <div class="role-permissions"
+          <div class="role-permissions">
             <div class="permission-tag" v-for="perm in role.permissions.slice(0, 5)" :key="perm">
               {{ perm }}
             </div>
