@@ -212,4 +212,68 @@ onMounted(fetchData)
   margin-top: 20px;
   justify-content: flex-end;
 }
+
+/* 移动端样式 */
+@media (max-width: 768px) {
+  .voucher-list {
+    padding: 12px;
+  }
+  
+  .card-header span {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  
+  .el-form--inline .el-form-item {
+    display: block;
+    margin-right: 0;
+    margin-bottom: 12px;
+  }
+  
+  .el-form--inline .el-form-item__content {
+    width: 100%;
+  }
+  
+  .el-form--inline .el-select {
+    width: 100%;
+  }
+  
+  .el-table {
+    font-size: 12px;
+  }
+  
+  .el-table .el-table__header-wrapper th,
+  .el-table .el-table__body-wrapper td {
+    padding: 8px 0;
+  }
+  
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .el-dialog {
+    width: 95% !important;
+    margin: 10px auto !important;
+  }
+  
+  .el-dialog__body {
+    padding: 16px;
+  }
+}
+
+/* 超小屏幕 */
+@media (max-width: 480px) {
+  .voucher-list {
+    padding: 8px;
+  }
+  
+  .el-table {
+    font-size: 11px;
+  }
+  
+  .el-tag {
+    font-size: 10px;
+  }
+}
 </style>

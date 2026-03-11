@@ -665,6 +665,88 @@ const handleRegister = async () => {
   }
 }
 
+/* 移动端优化 */
+@media (max-width: 768px) {
+  .login-container {
+    padding: 20px;
+  }
+  
+  .login-box {
+    width: 100%;
+    max-width: 420px;
+  }
+  
+  .login-box :deep(.el-card__body) {
+    padding: 28px 24px;
+  }
+  
+  .logo-container {
+    gap: 10px;
+  }
+  
+  .logo-icon {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .logo-text {
+    font-size: 26px;
+  }
+  
+  .tagline {
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+  
+  .form-options {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .form-options .el-checkbox {
+    width: 100%;
+  }
+  
+  .forgot-link {
+    align-self: flex-end;
+  }
+  
+  .login-btn {
+    height: 44px;
+    font-size: 15px;
+  }
+  
+  .login-footer {
+    margin-top: 20px;
+    font-size: 11px;
+  }
+}
+
+/* 超小屏幕 */
+@media (max-width: 375px) {
+  .login-box :deep(.el-card__body) {
+    padding: 24px 20px;
+  }
+  
+  .logo-text {
+    font-size: 22px;
+  }
+  
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .custom-input :deep(.el-input__inner) {
+    height: 40px;
+  }
+  
+  .auth-tabs :deep(.el-tabs__item) {
+    font-size: 14px;
+  }
+}
+
 /* 深色主题适配 */
 html.dark .login-box {
   background: rgba(30, 41, 59, 0.8);

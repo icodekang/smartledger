@@ -512,4 +512,112 @@ onMounted(() => {
   margin-top: 20px;
   justify-content: flex-end;
 }
+
+/* 移动端样式 */
+@media (max-width: 768px) {
+  .bank-flow-list {
+    padding: 12px;
+  }
+  
+  .stats-row {
+    margin-bottom: 12px;
+  }
+  
+  .stat-card {
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    margin-right: 12px;
+  }
+  
+  .stat-value {
+    font-size: 18px;
+  }
+  
+  .stat-label {
+    font-size: 12px;
+  }
+  
+  .card-header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .card-header .title {
+    font-size: 15px;
+  }
+  
+  .filter-section {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+  
+  .el-form--inline .el-form-item {
+    display: block;
+    margin-right: 0;
+    margin-bottom: 12px;
+  }
+  
+  .el-form--inline .el-form-item__content {
+    width: 100%;
+  }
+  
+  .el-date-editor,
+  .el-select {
+    width: 100% !important;
+  }
+  
+  .el-input-group {
+    width: 100% !important;
+  }
+  
+  .batch-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  
+  .el-table {
+    font-size: 12px;
+  }
+  
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .el-dialog {
+    width: 95% !important;
+    margin: 10px auto !important;
+  }
+}
+
+/* 超小屏幕 */
+@media (max-width: 480px) {
+  .bank-flow-list {
+    padding: 8px;
+  }
+  
+  .stat-card {
+    padding: 12px;
+  }
+  
+  .stat-value {
+    font-size: 16px;
+  }
+  
+  .el-table {
+    font-size: 11px;
+  }
+  
+  .el-button {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
 </style>

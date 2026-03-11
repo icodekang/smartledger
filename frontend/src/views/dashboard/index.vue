@@ -1129,8 +1129,31 @@ onMounted(() => {
     font-size: 20px;
   }
   
+  .welcome-subtitle {
+    font-size: 13px;
+    flex-wrap: wrap;
+  }
+  
   .stat-card {
     margin-bottom: 0;
+    padding: 20px;
+  }
+  
+  .stat-icon-wrapper {
+    margin-bottom: 16px;
+  }
+  
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .stat-value {
+    font-size: 26px;
+  }
+  
+  .stat-label {
+    font-size: 13px;
   }
   
   .chart-wrapper {
@@ -1142,8 +1165,17 @@ onMounted(() => {
     height: 160px;
   }
   
+  .chart-legend {
+    width: 100%;
+  }
+  
+  .legend-item {
+    padding: 8px 12px;
+  }
+  
   .action-buttons {
     grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
   
   .step-item {
@@ -1152,6 +1184,142 @@ onMounted(() => {
   
   .action-item {
     padding: 16px 12px;
+  }
+  
+  .action-icon {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .action-text {
+    font-size: 14px;
+  }
+  
+  .action-desc {
+    font-size: 12px;
+  }
+  
+  .card-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .recent-item {
+    padding: 12px;
+  }
+  
+  .recent-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .recent-title {
+    font-size: 14px;
+  }
+  
+  .recent-meta {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .workflow-card :deep(.el-card__body) {
+    padding: 16px;
+  }
+  
+  .step-number {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .step-title {
+    font-size: 14px;
+  }
+  
+  .step-desc {
+    font-size: 11px;
+  }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 480px) {
+  .dashboard {
+    padding: 12px;
+  }
+  
+  .welcome-section {
+    padding: 16px;
+  }
+  
+  .welcome-title {
+    font-size: 18px;
+  }
+  
+  .welcome-subtitle {
+    font-size: 12px;
+  }
+  
+  .stat-value {
+    font-size: 22px;
+  }
+  
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .stat-icon :deep(.el-icon) {
+    font-size: 20px !important;
+  }
+  
+  .action-buttons {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  
+  .action-item {
+    padding: 12px 8px;
+  }
+  
+  .action-icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 10px;
+  }
+  
+  .action-icon :deep(.el-icon) {
+    font-size: 18px !important;
+  }
+  
+  .donut-chart {
+    width: 140px;
+    height: 140px;
+  }
+  
+  .donut-value {
+    font-size: 22px;
+  }
+  
+  .recent-item {
+    flex-wrap: wrap;
+  }
+  
+  .recent-time {
+    width: 100%;
+    margin-top: 8px;
+  }
+  
+  .workflow-steps {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .step-item {
+    width: 100%;
+  }
+  
+  .step-number {
+    width: 40px;
+    height: 40px;
   }
 }
 

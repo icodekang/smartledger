@@ -4,34 +4,36 @@
       <template #header>
         <div class="card-header">
           <span>票据管理</span>
-          <el-button type="primary" @click="showUploadDialog = true">
-            <el-icon><Upload /></el-icon> 上传票据
+          <el-button type="primary" size="small" @click="showUploadDialog = true">
+            <el-icon><Upload /></el-icon> 上传
           </el-button>
         </div>
       </template>
       
-      <!-- 筛选 -->
-      <el-form :inline="true" :model="filterForm">
-        <el-form-item label="票据类型">
-          <el-select v-model="filterForm.bill_type" placeholder="全部" clearable>
-            <el-option label="增值税发票" value="invoice" />
-            <el-option label="收据" value="receipt" />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="状态">
-          <el-select v-model="filterForm.process_status" placeholder="全部" clearable>
-            <el-option label="待处理" value="pending" />
-            <el-option label="OCR完成" value="ocr_completed" />
-            <el-option label="已生成凭证" value="voucher_generated" />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item>
-          <el-button type="primary" @click="fetchData">查询</el-button>
-          <el-button @click="resetFilter">重置</el-button>
-        </el-form-item>
-      </el-form>
+      <!-- 筛选 - 移动端简化版 -->
+      <div class="filter-section">
+        <el-form :inline="true" :model="filterForm" class="filter-form">
+          <el-form-item label="类型" class="filter-item">
+            <el-select v-model="filterForm.bill_type" placeholder="全部" clearable size="small">
+              <el-option label="增值税发票" value="invoice" />
+              <el-option label="收据" value="receipt" />
+            </el-select>
+          </el-form-item>
+          
+          <el-form-item label="状态" class="filter-item">
+            <el-select v-model="filterForm.process_status" placeholder="全部" clearable size="small">
+              <el-option label="待处理" value="pending" />
+              <el-option label="OCR完成" value="ocr_completed" />
+              <el-option label="已生成凭证" value="voucher_generated" />
+            </el-select>
+          </el-form-item>
+          
+          <el-form-item class="filter-actions">
+            <el-button type="primary" size="small" @click="fetchData">查询</el-button>
+            <el-button size="small" @click="resetFilter">重置</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
       
       <!-- 表格 -->
       <el-table :data="tableData" v-loading="loading" border>
@@ -293,8 +295,175 @@ onMounted(fetchData)
   align-items: center;
 }
 
+/* 筛选区域 */
+.filter-section {
+  margin-bottom: 16px;
+}
+
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-item {
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+.filter-item :deep(.el-form-item__label) {
+  font-size: 13px;
+  padding: 0 4px;
+}
+
+.filter-actions {
+  margin-left: auto;
+}
+
 .pagination {
   margin-top: 20px;
   justify-content: flex-end;
+}
+
+/* 移动端样式 */
+@media (max-width: 768px) {
+  .bill-list {
+    padding: 12px;
+  }
+  
+  .card-header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .card-header span {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  
+  .filter-form {
+    flex-direction: column;
+  }
+  
+  .filter-item {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
+  
+  .filter-item :deep(.el-select) {
+    width: 100%;
+  }
+  
+  .filter-actions {
+    width: 100%;
+    margin-left: 0;
+    display: flex;
+    gap: 8px;
+  }
+  
+  .filter-actions .el-button {
+    flex: 1;
+  }
+  
+  /* 移动端表格优化 */
+  .el-table {
+    font-size: 12px;
+  }
+  
+  .el-table .el-table__header-wrapper th,
+  .el-table .el-table__body-wrapper td {
+    padding: 8px 0;
+  }
+  
+  .el-table .el-table__body tr > td {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 8px;
+    min-width: 100%;
+  }
+  
+  /* 操作按钮 */
+  .el-table .el-button {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  
+  .el-table .el-button + .el-button {
+    margin-left: 8px;
+  }
+  
+  /* 分页 */
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  /* 对话框 */
+  .el-dialog {
+    width: 95% !important;
+    max-width: 100%;
+    margin: 10px auto !important;
+  }
+  
+  .el-dialog__header {
+    padding: 12px 16px;
+  }
+  
+  .el-dialog__body {
+    padding: 16px;
+  }
+  
+  /* 描述列表 */
+  .el-descriptions {
+    font-size: 13px;
+  }
+  
+  .el-descriptions__label,
+  .el-descriptions__content {
+    padding: 8px 12px;
+  }
+  
+  /* 移动端上传区域 */
+  .el-upload-dragger {
+    padding: 20px;
+  }
+  
+  .el-upload__text {
+    font-size: 13px;
+  }
+}
+
+/* 超小屏幕 */
+@media (max-width: 480px) {
+  .bill-list {
+    padding: 8px;
+  }
+  
+  .card-header span {
+    font-size: 15px;
+  }
+  
+  .el-table {
+    font-size: 11px;
+  }
+  
+  .el-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+  
+  .pagination {
+    padding: 8px 0;
+  }
+  
+  .el-pagination button,
+  .el-pagination .el-pager li {
+    min-width: 28px;
+    height: 28px;
+    line-height: 28px;
+    font-size: 12px;
+  }
 }
 </style>
