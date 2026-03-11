@@ -1,0 +1,137 @@
+/* SmartLedger 主题系统 - CSS 变量定义 */
+/* 专业商务风格：深蓝/紫色系 */
+
+:root {
+  /* ==================== 亮色主题 ==================== */
+  /* 主色调 */
+  --el-color-primary: #3b5cf5;
+  --el-color-primary-light-3: #6681f7;
+  --el-color-primary-light-5: #8d9bf8;
+  --el-color-primary-light-7: #b0b5fa;
+  --el-color-primary-light-8: #c3c8fb;
+  --el-color-primary-light-9: #d6dbfd;
+  --el-color-primary-dark-2: #2e49c2;
+
+  /* 成功/警告/错误/信息色 */
+  --el-color-success: #10b981;
+  --el-color-warning: #f59e0b;
+  --el-color-danger: #ef4444;
+  --el-color-info: #6366f1;
+
+  /* 背景色 */
+  --el-bg-color: #ffffff;
+  --el-bg-color-overlay: #ffffff;
+  --el-bg-color-page: #f8f9fc;
+
+  /* 文字颜色 */
+  --el-text-color-primary: #1f2937;
+  --el-text-color-regular: #4b5563;
+  --el-text-color-secondary: #9ca3af;
+  --el-text-color-placeholder: #d1d5db;
+
+  /* 边框颜色 */
+  --el-border-color: #e5e7eb;
+  --el-border-color-light: #f3f4f6;
+  --el-border-color-lighter: #f9fafb;
+
+  /* 填充色 */
+  --el-fill-color: #f9fafb;
+  --el-fill-color-light: #f3f4f6;
+  --el-fill-color-lighter: #f9fafb;
+  --el-fill-color-blank: #ffffff;
+
+  /* 阴影 */
+  --el-box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --el-box-shadow-light: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+
+  /* 自定义业务颜色 */
+  --sl-primary: #3b5cf5;
+  --sl-primary-hover: #2e49c2;
+  --sl-secondary: #6366f1;
+  --sl-bg-main: #f8f9fc;
+  --sl-bg-card: #ffffff;
+  --sl-text-primary: #1f2937;
+  --sl-text-secondary: #6b7280;
+  --sl-border: #e5e7eb;
+
+  /* 侧边栏 */
+  --sl-sidebar-bg: #ffffff;
+  --sl-sidebar-text: #4b5563;
+  --sl-sidebar-active-bg: #eef2ff;
+  --sl-sidebar-active-text: #3b5cf5;
+
+  /* 过渡动画 */
+  --sl-transition-duration: 0.3s;
+  --sl-transition-timing: ease;
+}
+
+/* ==================== 深色主题 ==================== */
+html.dark {
+  /* 主色调 - 深色模式下调整 */
+  --el-color-primary: #6366f1;
+  --el-color-primary-light-3: #818cf8;
+  --el-color-primary-light-5: #a5b4fc;
+  --el-color-primary-light-7: #c7d2fe;
+  --el-color-primary-light-8: #ddd6fe;
+  --el-color-primary-light-9: #ede9fe;
+  --el-color-primary-dark-2: #4f46e5;
+
+  /* 成功/警告/错误/信息色 */
+  --el-color-success: #34d399;
+  --el-color-warning: #fbbf24;
+  --el-color-danger: #f87171;
+  --el-color-info: #818cf8;
+
+  /* 背景色 */
+  --el-bg-color: #0f172a;
+  --el-bg-color-overlay: #1e293b;
+  --el-bg-color-page: #0f172a;
+
+  /* 文字颜色 */
+  --el-text-color-primary: #f1f5f9;
+  --el-text-color-regular: #cbd5e1;
+  --el-text-color-secondary: #94a3b8;
+  --el-text-color-placeholder: #64748b;
+
+  /* 边框颜色 */
+  --el-border-color: #334155;
+  --el-border-color-light: #1e293b;
+  --el-border-color-lighter: #1e293b;
+
+  /* 填充色 */
+  --el-fill-color: #1e293b;
+  --el-fill-color-light: #1e293b;
+  --el-fill-color-lighter: #334155;
+  --el-fill-color-blank: #1e293b;
+
+  /* 阴影 */
+  --el-box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --el-box-shadow-light: 0 1px 3px 0 rgb(0 0 0 / 0.3);
+
+  /* 自定义业务颜色 */
+  --sl-primary: #6366f1;
+  --sl-primary-hover: #818cf8;
+  --sl-secondary: #818cf8;
+  --sl-bg-main: #0f172a;
+  --sl-bg-card: #1e293b;
+  --sl-text-primary: #f1f5f9;
+  --sl-text-secondary: #94a3b8;
+  --sl-border: #334155;
+
+  /* 侧边栏 */
+  --sl-sidebar-bg: #1e293b;
+  --sl-sidebar-text: #cbd5e1;
+  --sl-sidebar-active-bg: #312e81;
+  --sl-sidebar-active-text: #a5b4fc;
+}
+
+/* ==================== 全局过渡效果 ==================== */
+*,
+*::before,
+*::after {
+  transition: background-color var(--sl-transition-duration) var(--sl-transition-timing),
+              border-color var(--sl-transition-duration) var(--sl-transition-timing),
+              color var(--sl-transition-duration) var(--sl-transition-timing),
+              fill var(--sl-transition-duration) var(--sl-transition-timing),
+              box-shadow var(--sl-transition-duration) var(--sl-transition-timing);
+}
