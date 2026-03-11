@@ -13,7 +13,7 @@
         <el-card class="role-card" :class="{ 'is-default': role.isDefault }">
           <template #header>
             <div class="role-header">
-              <div class="role-info"
+              <div class="role-info">
                 <el-tag :type="role.type" size="small">{{ role.tag }}</el-tag>
                 <h3>{{ role.name }}</h3>
               </div>
@@ -26,7 +26,7 @@
           
           <p class="role-desc">{{ role.description }}</p>
           
-          <div class="role-stats"
+          <div class="role-stats">
             <span><el-icon><User /></el-icon> {{ role.userCount }} 人</span>
             <span><el-icon><Key /></el-icon> {{ role.permissionCount }} 项权限</span>
           </div>

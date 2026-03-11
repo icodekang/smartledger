@@ -28,6 +28,16 @@ class UserCreateRequest(BaseModel):
     role: str = "viewer"
     is_active: bool = True
 
+    def validate_password(self):
+        """密码强度验证：至少8位，包含字母和数字"""
+        if len(self.password) < 8:
+            raise ValueError("密码长度至少8位")
+        if not any(c.isalpha() for c in self.password):
+            raise ValueError("密码必须包含字母")
+        if not any(c.isdigit() for c in self.password):
+            raise ValueError("密码必须包含数字")
+        return True
+
 @router.get("/users")
 async def list_users(
     keyword: Optional[str] = None,
@@ -78,6 +88,12 @@ async def create_user(
 ):
     """创建用户"""
     from app.core.security import get_password_hash
+    
+    # 密码强度验证
+    try:
+        request.validate_password()
+    except ValueError as e:
+        return error_response(400, str(e))
     
     exists = db.query(User).filter(User.username == request.username).first()
     if exists:
@@ -235,6 +251,29 @@ async def list_logs(
         })
     
     return success_response(data={"items": items, "total": total})
+
+
+@router.delete("/logs/clear")
+async def clear_logs(
+    days: Optional[int] = Query(None, description="保留最近N天的日志，不传则清空所有"),
+    current_user=Depends(require_permission("sys:logs:delete")),
+    db: Session = Depends(get_db)
+):
+    """清理操作日志"""
+    from datetime import timedelta
+    
+    query = db.query(OperationLog)
+    
+    if days:
+        from datetime import datetime
+        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        query = query.filter(OperationLog.created_at < cutoff_date)
+        deleted = query.delete()
+    else:
+        deleted = query.delete()
+    
+    db.commit()
+    return success_response(data={"message": f"已清理 {deleted} 条日志"})
 
 
 # ===== TASK-SYS-04: 系统配置 =====
