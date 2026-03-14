@@ -193,6 +193,30 @@ async def list_roles(
     return success_response(data={"items": items})
 
 
+@router.post("/roles")
+async def create_role(
+    request: dict,
+    current_user=Depends(require_permission("sys:roles:create"))
+):
+    """创建角色"""
+    code = request.get("code")
+    name = request.get("name")
+    permissions = request.get("permissions", [])
+    
+    if not code or not name:
+        return error_response(400, "角色代码和名称不能为空")
+    
+    if code in ROLES_CONFIG:
+        return error_response(400, "角色代码已存在")
+    
+    ROLES_CONFIG[code] = {
+        "name": name,
+        "permissions": permissions
+    }
+    
+    return success_response(data={"code": code, "message": "角色创建成功"})
+
+
 # ===== TASK-SYS-03: 操作日志 =====
 
 from sqlalchemy import Column, String, Text, JSON, DateTime
@@ -298,6 +322,17 @@ async def get_config(
 ):
     """获取系统配置"""
     return success_response(data=SYSTEM_CONFIG)
+
+
+@router.post("/config")
+async def update_config_post(
+    config: dict,
+    current_user=Depends(require_permission("sys:config:update"))
+):
+    """更新系统配置 (POST method)"""
+    global SYSTEM_CONFIG
+    SYSTEM_CONFIG.update(config)
+    return success_response(data={"message": "配置更新成功"})
 
 
 @router.put("/config")

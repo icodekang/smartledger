@@ -2,7 +2,21 @@
 -- 创建扩展
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 1. 用户表
+-- 1. 客户表 (先创建)
+CREATE TABLE IF NOT EXISTS customers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(200) NOT NULL,
+    tax_no VARCHAR(20) UNIQUE,
+    industry VARCHAR(50),
+    taxpayer_type VARCHAR(20),
+    contact_name VARCHAR(100),
+    contact_phone VARCHAR(20),
+    status VARCHAR(20) DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. 用户表
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -15,21 +29,10 @@ CREATE TABLE IF NOT EXISTS users (
     customer_id UUID REFERENCES customers(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_login TIMESTAMP
-);
-
--- 2. 客户表
-CREATE TABLE IF NOT EXISTS customers (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(200) NOT NULL,
-    tax_no VARCHAR(20) UNIQUE,
-    industry VARCHAR(50),
-    taxpayer_type VARCHAR(20),
-    contact_name VARCHAR(100),
-    contact_phone VARCHAR(20),
-    status VARCHAR(20) DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    last_login TIMESTAMP,
+    failed_login_attempts INTEGER DEFAULT 0,
+    locked_until TIMESTAMP,
+    last_failed_login TIMESTAMP
 );
 
 -- 3. 票据表
