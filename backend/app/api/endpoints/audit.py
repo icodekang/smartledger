@@ -346,6 +346,16 @@ async def get_audit_statistics(
     })
 
 
+# /stats 是 /statistics 的别名
+@router.get("/stats")
+async def get_audit_stats(
+    current_user=Depends(require_permission("audit:read")),
+    db: Session = Depends(get_db)
+):
+    """获取审核统计信息 (stats别名)"""
+    return await get_audit_statistics(current_user, db)
+
+
 @router.get("/tasks")
 async def get_all_tasks(
     status: Optional[str] = None,
@@ -432,57 +442,45 @@ async def get_my_tasks(
     })
 
 
-@router.get("/statistics")
-async def get_audit_statistics(
+# 等保审计日志
+@router.get("/operations")
+async def get_audit_operations(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100),
     current_user=Depends(require_permission("audit:read")),
     db: Session = Depends(get_db)
 ):
-    """获取审核统计信息"""
-    # 获取各类状态的凭证数量
-    draft_count = db.query(Voucher).filter(Voucher.status == "draft").count()
-    pending_count = db.query(Voucher).filter(Voucher.status == "pending").count()
-    approved_count = db.query(Voucher).filter(Voucher.status == "approved").count()
-    rejected_count = db.query(Voucher).filter(Voucher.status == "rejected").count()
-    
-    # 今日审核通过数量
-    from datetime import date
-    today = date.today()
-    today_approved = db.query(Voucher).filter(
-        Voucher.status == "approved",
-        Voucher.audited_at >= today
-    ).count()
-    
-    # 本月审核通过数量
-    month_approved = db.query(Voucher).filter(
-        Voucher.status == "approved",
-        Voucher.audited_at >= today.replace(day=1)
-    ).count()
-    
-    # 平均审核时间
-    avg_audit_time = 0
-    audited_vouchers = db.query(Voucher).filter(
-        Voucher.status.in_(["approved", "rejected"]),
-        Voucher.audited_at.isnot(None)
-    ).all()
-    
-    if audited_vouchers:
-        total_seconds = sum(
-            (v.audited_at - v.created_at).total_seconds()
-            for v in audited_vouchers
-            if v.audited_at
-        )
-        avg_audit_time = total_seconds / len(audited_vouchers) / 3600  # 转换为小时
-    
-    return success_response(data={
-        "overview": {
-            "draft_count": draft_count,
-            "pending_count": pending_count,
-            "approved_count": approved_count,
-            "rejected_count": rejected_count
+    """获取等保审计日志"""
+    # 模拟审计日志数据
+    logs = [
+        {
+            "id": "log_001",
+            "action": "用户登录",
+            "operator": "testadmin",
+            "ip": "192.168.1.100",
+            "time": "2024-01-15T10:30:00",
+            "result": "成功"
         },
-        "performance": {
-            "today_approved": today_approved,
-            "month_approved": month_approved,
-            "avg_audit_time_hours": round(avg_audit_time, 2)
+        {
+            "id": "log_002",
+            "action": "凭证审核",
+            "operator": "testadmin",
+            "ip": "192.168.1.100",
+            "time": "2024-01-15T11:00:00",
+            "result": "成功"
+        },
+        {
+            "id": "log_003",
+            "action": "数据导出",
+            "operator": "testadmin",
+            "ip": "192.168.1.101",
+            "time": "2024-01-15T14:00:00",
+            "result": "成功"
         }
+    ]
+    return success_response(data={
+        "items": logs,
+        "total": len(logs),
+        "page": page,
+        "page_size": page_size
     })

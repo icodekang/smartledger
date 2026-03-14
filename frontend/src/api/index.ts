@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import router from '../router'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
@@ -38,7 +39,8 @@ api.interceptors.response.use(
     const { response } = error
     if (response?.status === 401) {
       localStorage.removeItem('token')
-      window.location.href = '/login'
+      // 使用 router.push 而不是 window.location.href，避免页面刷新
+      router.push('/login')
     } else if (response?.status === 429) {
       ElMessage.error('请求过于频繁，请稍后再试')
     } else if (response?.status === 403) {

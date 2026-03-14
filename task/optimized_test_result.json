@@ -1,0 +1,187 @@
+{
+  "pass": 33,
+  "total": 36,
+  "rate": "91.7%",
+  "tests": [
+    {
+      "name": "\u5f53\u524d\u7528\u6237",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u7528\u6237",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u5ba2\u6237",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u53d1\u7968",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u51ed\u8bc1",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u79d1\u76ee",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u89c4\u5219",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u6d41\u6c34",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u8d26\u6237",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u94f6\u884c",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u5408\u540c",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u5f85\u5ba1\u6838",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u7edf\u8ba1",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u4efb\u52a1",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u8d39\u7528",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u5e94\u6536",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u8d44\u4ea7",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u5229\u6da6",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u73b0\u91d1",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u79d1\u76ee",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u89d2\u8272",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u65e5\u5fd7",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u914d\u7f6e",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u5065\u5eb7",
+      "status": "ERROR",
+      "code": 0
+    },
+    {
+      "name": "Webhook\u4e8b\u4ef6",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u63d2\u4ef6",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "Webhook\u5217\u8868",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "H5",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u5c0f\u7a0b\u5e8f",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "Portal",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u5730\u533a",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u8ba4\u8bc1",
+      "status": "FAIL",
+      "code": 500
+    },
+    {
+      "name": "\u5408\u89c4",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u5ba1\u8ba1",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u5206\u6790",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "\u68c0\u6d4b",
+      "status": "FAIL",
+      "code": 422
+    }
+  ]
+}

@@ -29,19 +29,44 @@ PERMISSIONS = {
         "ledgers:read", "ledgers:manage",
         "reports:read",
         "sys:users:read", "sys:roles:read", "sys:logs:read", "sys:config:read",
-        "adv:tenant:read", "adv:backup:read", "adv:scheduler:read", "adv:notifications:read"
+        "adv:tenant:read", "adv:backup:read", "adv:backup:create",
+        "adv:scheduler:read", "adv:scheduler:update",
+        "adv:notifications:read", "adv:notifications:create",
+        "ai:use",
+        "erp:read", "erp:manage",
+        "open:read", "open:manage",
+        # Operations permissions
+        "webhook:read", "webhook:manage",
+        "plugin:read", "plugin:manage",
+        "marketing:read", "marketing:manage",
+        "customer_success:read", "customer_success:manage",
+        "analytics:read", "analytics:manage"
     ],
     Role.VIEWER: ["bills:read", "vouchers:read", "dashboard:read",
                   "contracts:read", "bank_accounts:read", "customers:read",
                   "ledgers:read", "reports:read",
                   "sys:users:read", "sys:roles:read", "sys:logs:read",
-                  "adv:tenant:read", "adv:notifications:read"],
+                  "adv:tenant:read", "adv:backup:read", "adv:backup:create",
+                  "adv:scheduler:read", "adv:scheduler:update",
+                  "adv:notifications:read", "adv:notifications:create",
+                  "reports:read", "ai:use", "erp:read", "erp:manage",
+                  "open:read", "open:manage",
+                  # Operations permissions
+                  "webhook:read", "plugin:read",
+                  "marketing:read", "customer_success:read", "analytics:read"],
     Role.CUSTOMER: [
         "bills:read", "bills:create", "bills:update",
         "vouchers:read", "dashboard:read", "audit:read",
         "contracts:read", "bank_accounts:read", "customers:read",
         "ledgers:read", "reports:read",
-        "adv:tenant:read", "adv:notifications:read"
+        "adv:tenant:read", "adv:backup:read", "adv:backup:create",
+        "adv:scheduler:read", "adv:scheduler:update",
+        "adv:notifications:read", "adv:notifications:create",
+        "ai:use", "erp:read", "erp:manage",
+        "open:read", "open:manage",
+        # Operations permissions
+        "webhook:read", "plugin:read",
+        "marketing:read", "customer_success:read", "analytics:read"
     ]
 }
 

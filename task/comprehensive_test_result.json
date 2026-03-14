@@ -1,0 +1,381 @@
+{
+  "test_time": "2026-03-14T18:08:38.829840",
+  "total": 62,
+  "pass": 62,
+  "fail": 0,
+  "pass_rate": "100.0%",
+  "details": [
+    {
+      "name": "当前用户",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "用户列表",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "票据列表",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "票据详情",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "创建票据",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "票据筛选",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "票据分页",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "凭证列表",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "会计科目",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "凭证规则",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "客户列表",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "客户详情",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "创建客户",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "客户筛选",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "合同列表",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "合同统计",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "账套列表",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "银行流水",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "银行账户",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "银行列表",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "待审核",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "审核统计",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "我的任务",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "费用报表",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "应收报表",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "资产负债表",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "利润表",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "现金流量表",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "科目余额表",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "系统角色",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "系统日志",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "系统配置",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "健康检查",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "Webhook事件",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "插件列表",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "Webhook列表",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "H5",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "小程序",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "Portal",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "智能分析",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "异常检测",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "异常规则",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "税务地区",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "税务认证",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "安全合规",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "安全审计",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "客户统计",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "客户搜索",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "客户更新",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "票据统计",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "票据类型",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "凭证统计",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "凭证筛选",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "银行流水统计",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "账户统计",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "审核操作",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "审核任务",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "税种列表",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "税务提醒",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "AI洞察",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "AI建议",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    },
+    {
+      "name": "AI异常告警",
+      "status": "PASS",
+      "code": 200,
+      "detail": ""
+    }
+  ]
+}

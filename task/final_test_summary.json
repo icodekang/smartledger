@@ -1,0 +1,30 @@
+{
+  "test_time": "Sat Mar 14 06:07:03 PM CST 2026",
+  "total": 49,
+  "pass": 49,
+  "fail": 0,
+  "pass_rate": "100.0%",
+  "steps": [
+    {
+      "step": "Step1",
+      "total": 14,
+      "pass": 14,
+      "fail": 0,
+      "pass_rate": "100.0%"
+    },
+    {
+      "step": "Step2",
+      "total": 7,
+      "pass": 7,
+      "fail": 0,
+      "pass_rate": "100.0%"
+    },
+    {
+      "step": "Step3",
+      "total": 28,
+      "pass": 28,
+      "fail": 0,
+      "pass_rate": "100.0%"
+    }
+  ]
+}

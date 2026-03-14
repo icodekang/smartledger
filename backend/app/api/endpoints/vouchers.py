@@ -85,6 +85,73 @@ async def get_rules(
     return success_response(data={"items": RULES})
 
 
+# 凭证模板数据
+VOUCHER_TEMPLATES = [
+    {
+        "id": "tpl_001",
+        "name": "采购入库",
+        "description": "采购商品入库生成凭证",
+        "industry": "trade",
+        "entries": [
+            {"subject_code": "1405", "subject_name": "库存商品", "debit": "{amount}", "credit": "0", "summary": "采购商品入库"},
+            {"subject_code": "2221", "subject_name": "应交税费", "debit": "{tax}", "credit": "0", "summary": "进项税额"},
+            {"subject_code": "2202", "subject_name": "应付账款", "debit": "0", "credit": "{total}", "summary": "应付货款"}
+        ]
+    },
+    {
+        "id": "tpl_002",
+        "name": "销售出库",
+        "description": "销售商品出库生成凭证",
+        "industry": "trade",
+        "entries": [
+            {"subject_code": "1122", "subject_name": "应收账款", "debit": "{total}", "credit": "0", "summary": "应收货款"},
+            {"subject_code": "6001", "subject_name": "主营业务收入", "debit": "0", "credit": "{amount}", "summary": "销售收入"},
+            {"subject_code": "2221", "subject_name": "应交税费", "debit": "0", "credit": "{tax}", "summary": "销项税额"}
+        ]
+    },
+    {
+        "id": "tpl_003",
+        "name": "费用报销",
+        "description": "管理费用报销生成凭证",
+        "industry": "service",
+        "entries": [
+            {"subject_code": "6602", "subject_name": "管理费用", "debit": "{amount}", "credit": "0", "summary": "管理费用"},
+            {"subject_code": "1001", "subject_name": "库存现金", "debit": "0", "credit": "{amount}", "summary": "现金支付"}
+        ]
+    },
+    {
+        "id": "tpl_004",
+        "name": "银行收款",
+        "description": "银行账户收款生成凭证",
+        "industry": "通用",
+        "entries": [
+            {"subject_code": "1002", "subject_name": "银行存款", "debit": "{amount}", "credit": "0", "summary": "银行收款"},
+            {"subject_code": "1122", "subject_name": "应收账款", "debit": "0", "credit": "{amount}", "summary": "应收账款收回"}
+        ]
+    },
+    {
+        "id": "tpl_005",
+        "name": "银行付款",
+        "description": "银行账户付款生成凭证",
+        "industry": "通用",
+        "entries": [
+            {"subject_code": "2202", "subject_name": "应付账款", "debit": "{amount}", "credit": "0", "summary": "应付账款支付"},
+            {"subject_code": "1002", "subject_name": "银行存款", "debit": "0", "credit": "{amount}", "summary": "银行付款"}
+        ]
+    },
+    {
+        "id": "tpl_006",
+        "name": "工资发放",
+        "description": "工资发放生成凭证",
+        "industry": "service",
+        "entries": [
+            {"subject_code": "6602", "subject_name": "管理费用", "debit": "{amount}", "credit": "0", "summary": "工资费用"},
+            {"subject_code": "1001", "subject_name": "库存现金", "debit": "0", "credit": "{amount}", "summary": "现金发放"}
+        ]
+    },
+]
+
+
 @router.get("")
 async def list_vouchers(
     page: int = Query(1, ge=1, description="页码"),
@@ -140,6 +207,85 @@ async def list_vouchers(
         "page_size": page_size,
         "total_pages": (total + page_size - 1) // page_size
     })
+
+
+# 凭证模板数据
+VOUCHER_TEMPLATES = [
+    {
+        "id": "tpl_001",
+        "name": "采购入库",
+        "description": "采购商品入库生成凭证",
+        "industry": "trade",
+        "entries": [
+            {"subject_code": "1405", "subject_name": "库存商品", "debit": "{amount}", "credit": "0", "summary": "采购商品入库"},
+            {"subject_code": "2221", "subject_name": "应交税费", "debit": "{tax}", "credit": "0", "summary": "进项税额"},
+            {"subject_code": "2202", "subject_name": "应付账款", "debit": "0", "credit": "{total}", "summary": "应付货款"}
+        ]
+    },
+    {
+        "id": "tpl_002",
+        "name": "销售出库",
+        "description": "销售商品出库生成凭证",
+        "industry": "trade",
+        "entries": [
+            {"subject_code": "1122", "subject_name": "应收账款", "debit": "{total}", "credit": "0", "summary": "应收货款"},
+            {"subject_code": "6001", "subject_name": "主营业务收入", "debit": "0", "credit": "{amount}", "summary": "销售收入"},
+            {"subject_code": "2221", "subject_name": "应交税费", "debit": "0", "credit": "{tax}", "summary": "销项税额"}
+        ]
+    },
+    {
+        "id": "tpl_003",
+        "name": "费用报销",
+        "description": "管理费用报销生成凭证",
+        "industry": "service",
+        "entries": [
+            {"subject_code": "6602", "subject_name": "管理费用", "debit": "{amount}", "credit": "0", "summary": "管理费用"},
+            {"subject_code": "1001", "subject_name": "库存现金", "debit": "0", "credit": "{amount}", "summary": "现金支付"}
+        ]
+    },
+    {
+        "id": "tpl_004",
+        "name": "银行收款",
+        "description": "银行账户收款生成凭证",
+        "industry": "通用",
+        "entries": [
+            {"subject_code": "1002", "subject_name": "银行存款", "debit": "{amount}", "credit": "0", "summary": "银行收款"},
+            {"subject_code": "1122", "subject_name": "应收账款", "debit": "0", "credit": "{amount}", "summary": "应收账款收回"}
+        ]
+    },
+    {
+        "id": "tpl_005",
+        "name": "银行付款",
+        "description": "银行账户付款生成凭证",
+        "industry": "通用",
+        "entries": [
+            {"subject_code": "2202", "subject_name": "应付账款", "debit": "{amount}", "credit": "0", "summary": "应付账款支付"},
+            {"subject_code": "1002", "subject_name": "银行存款", "debit": "0", "credit": "{amount}", "summary": "银行付款"}
+        ]
+    },
+    {
+        "id": "tpl_006",
+        "name": "工资发放",
+        "description": "工资发放生成凭证",
+        "industry": "service",
+        "entries": [
+            {"subject_code": "6602", "subject_name": "管理费用", "debit": "{amount}", "credit": "0", "summary": "工资费用"},
+            {"subject_code": "1001", "subject_name": "库存现金", "debit": "0", "credit": "{amount}", "summary": "现金发放"}
+        ]
+    },
+]
+
+
+@router.get("/templates")
+async def get_templates(
+    industry: Optional[str] = Query(None, description="行业过滤"),
+    current_user=Depends(require_permission("vouchers:read"))
+):
+    """获取凭证模板列表"""
+    items = VOUCHER_TEMPLATES
+    if industry:
+        items = [t for t in items if t.get("industry") == industry]
+    return success_response(data={"items": items})
 
 
 @router.get("/{voucher_id}")

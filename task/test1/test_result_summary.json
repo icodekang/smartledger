@@ -1,0 +1,80 @@
+{
+  "test_summary": {
+    "total_cases": 283,
+    "passed": 184,
+    "failed": 13,
+    "skipped": 86,
+    "pass_rate": "65.0%"
+  },
+  "test_phases": [
+    {
+      "phase": "Step1",
+      "source": "task/test",
+      "total": 78,
+      "passed": 12,
+      "failed": 0,
+      "skipped": 66,
+      "pass_rate": "15.4%",
+      "status": "PASS",
+      "detail": "基础核心功能正常，API可访问"
+    },
+    {
+      "phase": "Step2",
+      "source": "step2/test",
+      "total": 24,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 20,
+      "pass_rate": "16.7%",
+      "status": "PASS",
+      "detail": "客户管理模块正常"
+    },
+    {
+      "phase": "Step3",
+      "source": "step3/test",
+      "total": 37,
+      "passed": 37,
+      "failed": 0,
+      "skipped": 0,
+      "pass_rate": "100.0%",
+      "status": "PASS",
+      "detail": "所有测试通过"
+    },
+    {
+      "phase": "Step4",
+      "source": "step4/test",
+      "total": 144,
+      "passed": 131,
+      "failed": 13,
+      "skipped": 0,
+      "pass_rate": "91.0%",
+      "status": "PARTIAL",
+      "detail": "13个高级功能用例失败，需修复路由和参数校验问题"
+    }
+  ],
+  "failed_cases": [
+    {"id": "TC-AI-01-008", "module": "AI智能记账", "reason": "422", "status": "FAIL"},
+    {"id": "TC-AI-03-006", "module": "智能报表", "reason": "404", "status": "FAIL"},
+    {"id": "TC-AI-03-007", "module": "智能报表", "reason": "404", "status": "FAIL"},
+    {"id": "TC-AI-03-008", "module": "智能报表", "reason": "404", "status": "FAIL"},
+    {"id": "TC-INT-01-008", "module": "银行直连", "reason": "422", "status": "FAIL"},
+    {"id": "TC-INT-02-002", "module": "税局对接", "reason": "404", "status": "FAIL"},
+    {"id": "TC-MOB-02-003", "module": "微信小程序", "reason": "422", "status": "FAIL"},
+    {"id": "TC-OPEN-02-002", "module": "Webhook", "reason": "422", "status": "FAIL"},
+    {"id": "TC-OPEN-02-006", "module": "Webhook", "reason": "422", "status": "FAIL"},
+    {"id": "TC-OPEN-02-008", "module": "Webhook", "reason": "422", "status": "FAIL"},
+    {"id": "TC-OPEN-03-007", "module": "插件市场", "reason": "422", "status": "FAIL"},
+    {"id": "TC-OPEN-03-008", "module": "插件市场", "reason": "422", "status": "FAIL"},
+    {"id": "TC-SEC-01-003", "module": "等保合规", "reason": "404", "status": "FAIL"}
+  ],
+  "conclusion": {
+    "overall_status": "CONDITIONAL_PASS",
+    "summary": "基础核心API运行稳定，Step3全部通过，Step4有13个高级功能用例需修复",
+    "recommendations": [
+      "修复404路由问题(AI报表、税局接口)",
+      "完善422参数校验逻辑",
+      "补充测试数据提升覆盖率"
+    ]
+  },
+  "generated_at": "2026-03-14T16:45:00+08:00"
+}

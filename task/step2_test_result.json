@@ -1,0 +1,51 @@
+{
+  "test_time": "2026-03-14T18:08:35.050424",
+  "total": 7,
+  "pass": 7,
+  "fail": 0,
+  "pass_rate": "100.0%",
+  "results": [
+    {
+      "id": "TC-CUS-001",
+      "name": "客户列表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-CUS-002",
+      "name": "客户详情",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-CUS-003",
+      "name": "创建客户",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-CUS-004",
+      "name": "客户筛选",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-CTR-005",
+      "name": "合同列表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-CTR-006",
+      "name": "合同统计",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-LEG-007",
+      "name": "账套列表",
+      "status": "PASS",
+      "code": 200
+    }
+  ]
+}

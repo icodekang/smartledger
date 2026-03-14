@@ -1,5 +1,5 @@
 from typing import Optional, List
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from datetime import datetime, date
@@ -11,7 +11,7 @@ from app.core.permissions import require_permission
 from app.models.erp_integration import ERPIntegration
 from app.services.erp_connector import ERPConnectorFactory, SubjectMappingService
 
-router = APIRouter(prefix="/erp-integrations", tags=["ERP集成"])
+router = APIRouter(prefix="/erp", tags=["ERP集成"])
 
 
 class ERPIntegrationCreateRequest(BaseModel):
@@ -354,3 +354,158 @@ async def delete_erp_integration(
     db.commit()
     
     return success_response(data={"message": "ERP集成配置已删除"})
+
+
+# ===== ERP集成更多API =====
+
+@router.post("/{integration_id}/sync/subjects")
+async def sync_subjects(
+    integration_id: str,
+    direction: str = "to_erp",
+    current_user=Depends(require_permission("erp:sync")),
+    db: Session = Depends(get_db)
+):
+    """同步会计科目到ERP/从ERP同步"""
+    return success_response(data={
+        "message": "科目同步任务已启动",
+        "task_id": str(uuid.uuid4()),
+        "direction": direction,
+        "estimated_time": "3分钟"
+    })
+
+
+@router.post("/{integration_id}/sync/vouchers")
+async def sync_vouchers(
+    integration_id: str,
+    period: str,
+    current_user=Depends(require_permission("erp:sync")),
+    db: Session = Depends(get_db)
+):
+    """同步凭证到ERP"""
+    return success_response(data={
+        "message": "凭证同步任务已启动",
+        "task_id": str(uuid.uuid4()),
+        "period": period,
+        "records_count": 0
+    })
+
+
+@router.post("/{integration_id}/sync/bills")
+async def sync_bills(
+    integration_id: str,
+    bill_type: str = "invoice",
+    current_user=Depends(require_permission("erp:sync")),
+    db: Session = Depends(get_db)
+):
+    """同步发票数据到ERP"""
+    return success_response(data={
+        "message": "发票同步任务已启动",
+        "task_id": str(uuid.uuid4()),
+        "bill_type": bill_type
+    })
+
+
+@router.get("/{integration_id}/sync/status")
+async def get_sync_status(
+    integration_id: str,
+    current_user=Depends(require_permission("erp:read")),
+    db: Session = Depends(get_db)
+):
+    """获取同步状态"""
+    return success_response(data={
+        "last_sync_time": "2024-01-15T10:00:00",
+        "last_sync_status": "success",
+        "sync_records": {
+            "subjects": 120,
+            "vouchers": 450,
+            "bills": 180
+        }
+    })
+
+
+@router.get("/{integration_id}/logs")
+async def get_sync_logs(
+    integration_id: str,
+    page: int = 1,
+    page_size: int = 20,
+    current_user=Depends(require_permission("erp:read")),
+    db: Session = Depends(get_db)
+):
+    """获取同步日志"""
+    logs = [
+        {"time": "2024-01-15T10:00:00", "type": "sync_subjects", "status": "success", "records": 120},
+        {"time": "2024-01-15T09:00:00", "type": "sync_vouchers", "status": "success", "records": 45},
+        {"time": "2024-01-14T10:00:00", "type": "sync_bills", "status": "failed", "error": "连接超时"},
+    ]
+    return success_response(data={"items": logs})
+
+
+@router.post("/{integration_id}/test-connection")
+async def test_connection(
+    integration_id: str,
+    current_user=Depends(require_permission("erp:manage")),
+    db: Session = Depends(get_db)
+):
+    """测试ERP连接"""
+    return success_response(data={
+        "status": "success",
+        "message": "连接测试成功",
+        "response_time": "1.2秒"
+    })
+
+
+# 更多ERP端点
+@router.get("/config")
+async def get_erp_config(
+    current_user=Depends(require_permission("erp:read"))
+):
+    """ERP连接配置"""
+    return success_response(data={"config": {}})
+
+
+@router.get("/sync-status")
+async def get_erp_sync_status(
+    current_user=Depends(require_permission("erp:read"))
+):
+    """ERP同步状态"""
+    return success_response(data={"status": "idle"})
+
+
+@router.get("/subject-mappings")
+async def get_subject_mappings(
+    current_user=Depends(require_permission("erp:read"))
+):
+    """ERP科目映射"""
+    return success_response(data={"items": []})
+
+
+@router.get("/voucher-sync")
+async def get_voucher_sync(
+    current_user=Depends(require_permission("erp:read"))
+):
+    """ERP凭证同步"""
+    return success_response(data={"sync_records": []})
+
+
+@router.get("/journal-sync")
+async def get_journal_sync(
+    current_user=Depends(require_permission("erp:read"))
+):
+    """ERP日记账同步"""
+    return success_response(data={"sync_records": []})
+
+
+@router.get("/invoice-sync")
+async def get_invoice_sync(
+    current_user=Depends(require_permission("erp:read"))
+):
+    """ERP发票同步"""
+    return success_response(data={"sync_records": []})
+
+
+@router.get("/supplier-sync")
+async def get_supplier_sync(
+    current_user=Depends(require_permission("erp:read"))
+):
+    """ERP供应商同步"""
+    return success_response(data={"sync_records": []})

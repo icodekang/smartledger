@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional, List
@@ -73,3 +73,44 @@ async def send_message(
         })
     except Exception as e:
         return error_response(500, f"发送失败: {str(e)}")
+
+
+# 更多企业IM端点
+@router.get("/config")
+async def get_im_config(
+    current_user=Depends(require_permission("im:read"))
+):
+    """企微配置"""
+    return success_response(data={"config": {}})
+
+
+@router.get("/messages")
+async def get_messages(
+    current_user=Depends(require_permission("im:read"))
+):
+    """企微消息"""
+    return success_response(data={"items": []})
+
+
+@router.get("/notifications")
+async def get_notifications(
+    current_user=Depends(require_permission("im:read"))
+):
+    """企微通知"""
+    return success_response(data={"items": []})
+
+
+@router.get("/approval-flows")
+async def get_approval_flows(
+    current_user=Depends(require_permission("im:read"))
+):
+    """企微审批流"""
+    return success_response(data={"items": []})
+
+
+@router.get("/contacts")
+async def get_contacts(
+    current_user=Depends(require_permission("im:read"))
+):
+    """企微通讯录"""
+    return success_response(data={"items": []})

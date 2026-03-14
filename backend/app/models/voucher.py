@@ -38,6 +38,7 @@ class VoucherItem(BaseModel):
     debit_amount = Column(Numeric(12, 2), default=0)
     credit_amount = Column(Numeric(12, 2), default=0)
     summary = Column(Text)
+    auxiliary_name = Column(String(100))  # 辅助核算项名称
     
     # 关系
     voucher = relationship("Voucher", back_populates="items")

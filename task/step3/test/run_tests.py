@@ -18,7 +18,7 @@ class APITester:
         self.access_token = None
         self.headers = {}
         
-    def login(self, username="admin", password="admin123"):
+    def login(self, username="testadmin", password="Test123456"):
         """登录获取 token"""
         try:
             resp = self.session.post(
@@ -27,7 +27,8 @@ class APITester:
             )
             if resp.status_code == 200:
                 data = resp.json()
-                self.access_token = data.get("access_token")
+                # API 返回结构: {"code": 200, "data": {"access_token": "...", ...}}
+                self.access_token = data.get("data", {}).get("access_token")
                 self.headers = {"Authorization": f"Bearer {self.access_token}"}
                 print(f"✅ 登录成功")
                 return True
@@ -74,30 +75,38 @@ def run_all_tests():
     # TEST-SYS-03: 操作日志审计
     results = {"name": "操作日志审计测试", "total": 7, "passed": 0, "failed": 0, "cases": []}
     try:
-        resp = tester.get("/customers", params={"page_size": 1})
-        if resp.status_code == 200:
-            data = resp.json()
-            customers = data.get("items", [])
-            if customers:
-                bill = {"bill_type": "invoice", "amount": 100.00, "total_amount": 113.00, "tax_amount": 13.00, "seller_name": "测试供应商"}
-                resp = tester.post("/invoices", json=bill)
-                if resp.status_code in [200, 201]:
-                    results["cases"].append({"id": "TC-SYS-03-001", "name": "操作日志记录", "status": "PASS", "detail": "创建票据成功"})
-                    results["passed"] += 1
-                else:
-                    results["cases"].append({"id": "TC-SYS-03-001", "name": "操作日志记录", "status": "FAIL", "detail": f"创建失败: {resp.status_code}"})
-                    results["failed"] += 1
-            else:
-                results["cases"].append({"id": "TC-SYS-03-001", "name": "操作日志记录", "status": "SKIP", "detail": "无可用客户"})
+        # 先创建客户
+        customer = {"name": "测试客户_日志审计", "tax_id": "91110000100000001X", "contact": "张三", "phone": "13800138000"}
+        resp = tester.post("/customers", json=customer)
+        
+        # 创建票据
+        bill = {"bill_type": "invoice", "amount": 100.00, "total_amount": 113.00, "tax_amount": 13.00, "seller_name": "测试供应商"}
+        resp = tester.post("/invoices", json=bill)
+        if resp.status_code in [200, 201]:
+            results["cases"].append({"id": "TC-SYS-03-001", "name": "操作日志记录", "status": "PASS", "detail": "创建票据成功"})
+            results["passed"] += 1
         else:
-            results["cases"].append({"id": "TC-SYS-03-001", "name": "操作日志记录", "status": "FAIL", "detail": f"获取客户失败: {resp.status_code}"})
+            results["cases"].append({"id": "TC-SYS-03-001", "name": "操作日志记录", "status": "FAIL", "detail": f"创建失败: {resp.status_code}"})
             results["failed"] += 1
     except Exception as e:
         results["cases"].append({"id": "TC-SYS-03-001", "name": "操作日志记录", "status": "ERROR", "detail": str(e)})
         results["failed"] += 1
     
-    for i in range(2, 8):
-        results["cases"].append({"id": f"TC-SYS-03-{i:03d}", "name": f"日志审计-{i}", "status": "SKIP", "detail": "日志查询API未暴露"})
+    # 测试日志查询API
+    try:
+        resp = tester.get("/sys/logs")
+        if resp.status_code == 200:
+            results["cases"].append({"id": "TC-SYS-03-002", "name": "日志查询", "status": "PASS", "detail": "日志查询成功"})
+            results["passed"] += 1
+        else:
+            results["cases"].append({"id": "TC-SYS-03-002", "name": "日志查询", "status": "FAIL", "detail": f"状态码: {resp.status_code}"})
+            results["failed"] += 1
+    except Exception as e:
+        results["cases"].append({"id": "TC-SYS-03-002", "name": "日志查询", "status": "ERROR", "detail": str(e)})
+        results["failed"] += 1
+    
+    for i in range(3, 8):
+        results["cases"].append({"id": f"TC-SYS-03-{i:03d}", "name": f"日志审计-{i}", "status": "SKIP", "detail": "需更多测试场景"})
     all_results["TEST-SYS-03"] = results
     
     # TEST-SYS-04: 系统参数配置
@@ -114,8 +123,34 @@ def run_all_tests():
         results["cases"].append({"id": "TC-SYS-04-001", "name": "系统运行状态", "status": "ERROR", "detail": str(e)})
         results["failed"] += 1
     
-    for i in range(2, 8):
-        results["cases"].append({"id": f"TC-SYS-04-{i:03d}", "name": f"系统配置-{i}", "status": "SKIP", "detail": "配置API未暴露"})
+    # 测试系统配置API
+    try:
+        resp = tester.get("/sys/config")
+        if resp.status_code == 200:
+            results["cases"].append({"id": "TC-SYS-04-002", "name": "系统配置查询", "status": "PASS", "detail": "配置查询成功"})
+            results["passed"] += 1
+        else:
+            results["cases"].append({"id": "TC-SYS-04-002", "name": "系统配置查询", "status": "FAIL", "detail": f"状态码: {resp.status_code}"})
+            results["failed"] += 1
+    except Exception as e:
+        results["cases"].append({"id": "TC-SYS-04-002", "name": "系统配置查询", "status": "ERROR", "detail": str(e)})
+        results["failed"] += 1
+    
+    # 测试角色列表API
+    try:
+        resp = tester.get("/sys/roles")
+        if resp.status_code == 200:
+            results["cases"].append({"id": "TC-SYS-04-003", "name": "角色列表查询", "status": "PASS", "detail": "角色列表查询成功"})
+            results["passed"] += 1
+        else:
+            results["cases"].append({"id": "TC-SYS-04-003", "name": "角色列表查询", "status": "FAIL", "detail": f"状态码: {resp.status_code}"})
+            results["failed"] += 1
+    except Exception as e:
+        results["cases"].append({"id": "TC-SYS-04-003", "name": "角色列表查询", "status": "ERROR", "detail": str(e)})
+        results["failed"] += 1
+    
+    for i in range(4, 8):
+        results["cases"].append({"id": f"TC-SYS-04-{i:03d}", "name": f"系统配置-{i}", "status": "SKIP", "detail": "需更多测试场景"})
     all_results["TEST-SYS-04"] = results
     
     # TEST-REPORT-01: 资产负债表
@@ -134,8 +169,34 @@ def run_all_tests():
         results["cases"].append({"id": "TC-REPORT-01-001", "name": "会计科目列表", "status": "ERROR", "detail": str(e)})
         results["failed"] += 1
     
-    for i in range(2, 9):
-        results["cases"].append({"id": f"TC-REPORT-01-{i:03d}", "name": f"资产负债-{i}", "status": "SKIP", "detail": "报表API未暴露"})
+    # 测试费用明细表
+    try:
+        resp = tester.get("/reports/expense-detail?customer_id=test&period=2024-01")
+        if resp.status_code == 200:
+            results["cases"].append({"id": "TC-REPORT-01-002", "name": "费用明细表", "status": "PASS", "detail": "费用明细表查询成功"})
+            results["passed"] += 1
+        else:
+            results["cases"].append({"id": "TC-REPORT-01-002", "name": "费用明细表", "status": "FAIL", "detail": f"状态码: {resp.status_code}"})
+            results["failed"] += 1
+    except Exception as e:
+        results["cases"].append({"id": "TC-REPORT-01-002", "name": "费用明细表", "status": "ERROR", "detail": str(e)})
+        results["failed"] += 1
+    
+    # 测试应收账款报表
+    try:
+        resp = tester.get("/reports/accounts-receivable?customer_id=test&period=2024-01")
+        if resp.status_code == 200:
+            results["cases"].append({"id": "TC-REPORT-01-003", "name": "应收账款报表", "status": "PASS", "detail": "应收账款报表查询成功"})
+            results["passed"] += 1
+        else:
+            results["cases"].append({"id": "TC-REPORT-01-003", "name": "应收账款报表", "status": "FAIL", "detail": f"状态码: {resp.status_code}"})
+            results["failed"] += 1
+    except Exception as e:
+        results["cases"].append({"id": "TC-REPORT-01-003", "name": "应收账款报表", "status": "ERROR", "detail": str(e)})
+        results["failed"] += 1
+    
+    for i in range(4, 9):
+        results["cases"].append({"id": f"TC-REPORT-01-{i:03d}", "name": f"资产负债-{i}", "status": "SKIP", "detail": "需更多测试数据"})
     all_results["TEST-REPORT-01"] = results
     
     # TEST-REPORT-02: 利润表
@@ -218,20 +279,88 @@ def run_all_tests():
     
     # TEST-ADV-02: 数据备份恢复
     results = {"name": "数据备份恢复测试", "total": 8, "passed": 0, "failed": 0, "cases": []}
-    for i in range(1, 9):
-        results["cases"].append({"id": f"TC-ADV-02-{i:03d}", "name": f"备份恢复-{i}", "status": "SKIP", "detail": "备份恢复API未暴露"})
+    
+    # 测试备份任务列表
+    try:
+        resp = tester.get("/adv/backup/tasks")
+        if resp.status_code == 200:
+            results["cases"].append({"id": "TC-ADV-02-001", "name": "备份任务列表", "status": "PASS", "detail": "备份任务列表查询成功"})
+            results["passed"] += 1
+        else:
+            results["cases"].append({"id": "TC-ADV-02-001", "name": "备份任务列表", "status": "FAIL", "detail": f"状态码: {resp.status_code}"})
+            results["failed"] += 1
+    except Exception as e:
+        results["cases"].append({"id": "TC-ADV-02-001", "name": "备份任务列表", "status": "ERROR", "detail": str(e)})
+        results["failed"] += 1
+    
+    # 测试创建备份
+    try:
+        resp = tester.post("/adv/backup", json={"backup_type": "full"})
+        if resp.status_code in [200, 201]:
+            results["cases"].append({"id": "TC-ADV-02-002", "name": "创建备份", "status": "PASS", "detail": "备份创建成功"})
+            results["passed"] += 1
+        else:
+            results["cases"].append({"id": "TC-ADV-02-002", "name": "创建备份", "status": "FAIL", "detail": f"状态码: {resp.status_code}"})
+            results["failed"] += 1
+    except Exception as e:
+        results["cases"].append({"id": "TC-ADV-02-002", "name": "创建备份", "status": "ERROR", "detail": str(e)})
+        results["failed"] += 1
+    
+    for i in range(3, 9):
+        results["cases"].append({"id": f"TC-ADV-02-{i:03d}", "name": f"备份恢复-{i}", "status": "SKIP", "detail": "需更多测试场景"})
     all_results["TEST-ADV-02"] = results
     
     # TEST-ADV-03: 定时任务调度
     results = {"name": "定时任务调度测试", "total": 7, "passed": 0, "failed": 0, "cases": []}
-    for i in range(1, 8):
-        results["cases"].append({"id": f"TC-ADV-03-{i:03d}", "name": f"定时任务-{i}", "status": "SKIP", "detail": "定时任务API未暴露"})
+    
+    # 测试定时任务列表
+    try:
+        resp = tester.get("/adv/scheduler/jobs")
+        if resp.status_code == 200:
+            results["cases"].append({"id": "TC-ADV-03-001", "name": "定时任务列表", "status": "PASS", "detail": "定时任务列表查询成功"})
+            results["passed"] += 1
+        else:
+            results["cases"].append({"id": "TC-ADV-03-001", "name": "定时任务列表", "status": "FAIL", "detail": f"状态码: {resp.status_code}"})
+            results["failed"] += 1
+    except Exception as e:
+        results["cases"].append({"id": "TC-ADV-03-001", "name": "定时任务列表", "status": "ERROR", "detail": str(e)})
+        results["failed"] += 1
+    
+    for i in range(2, 8):
+        results["cases"].append({"id": f"TC-ADV-03-{i:03d}", "name": f"定时任务-{i}", "status": "SKIP", "detail": "需更多测试场景"})
     all_results["TEST-ADV-03"] = results
     
     # TEST-ADV-04: 消息通知中心
     results = {"name": "消息通知中心测试", "total": 8, "passed": 0, "failed": 0, "cases": []}
-    for i in range(1, 9):
-        results["cases"].append({"id": f"TC-ADV-04-{i:03d}", "name": f"消息通知-{i}", "status": "SKIP", "detail": "通知中心API未暴露"})
+    
+    # 测试通知列表
+    try:
+        resp = tester.get("/adv/notifications")
+        if resp.status_code == 200:
+            results["cases"].append({"id": "TC-ADV-04-001", "name": "通知列表", "status": "PASS", "detail": "通知列表查询成功"})
+            results["passed"] += 1
+        else:
+            results["cases"].append({"id": "TC-ADV-04-001", "name": "通知列表", "status": "FAIL", "detail": f"状态码: {resp.status_code}"})
+            results["failed"] += 1
+    except Exception as e:
+        results["cases"].append({"id": "TC-ADV-04-001", "name": "通知列表", "status": "ERROR", "detail": str(e)})
+        results["failed"] += 1
+    
+    # 测试未读通知数
+    try:
+        resp = tester.get("/adv/notifications/unread-count")
+        if resp.status_code == 200:
+            results["cases"].append({"id": "TC-ADV-04-002", "name": "未读通知数", "status": "PASS", "detail": "未读通知数查询成功"})
+            results["passed"] += 1
+        else:
+            results["cases"].append({"id": "TC-ADV-04-002", "name": "未读通知数", "status": "FAIL", "detail": f"状态码: {resp.status_code}"})
+            results["failed"] += 1
+    except Exception as e:
+        results["cases"].append({"id": "TC-ADV-04-002", "name": "未读通知数", "status": "ERROR", "detail": str(e)})
+        results["failed"] += 1
+    
+    for i in range(3, 9):
+        results["cases"].append({"id": f"TC-ADV-04-{i:03d}", "name": f"消息通知-{i}", "status": "SKIP", "detail": "需更多测试场景"})
     all_results["TEST-ADV-04"] = results
     
     return all_results

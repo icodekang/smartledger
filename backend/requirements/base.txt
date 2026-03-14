@@ -40,3 +40,6 @@ minio==7.2.3
 # AI
 openai==1.13.3
 langchain==0.1.11
+
+# PDF
+reportlab==4.0.9

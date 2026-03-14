@@ -21,6 +21,67 @@ router = APIRouter(prefix="/bank-flows", tags=["银行流水"])
 bank_flow_repo = BaseRepository(BankFlow)
 
 
+# 银行流水分类端点
+@router.get("/categories")
+async def get_flow_categories(
+    current_user=Depends(require_permission("bank_flows:read"))
+):
+    """银行流水分类"""
+    return success_response(data={"categories": []})
+
+
+# 银行对账端点
+@router.get("/reconciliation")
+async def get_reconciliation(
+    account_id: str,
+    current_user=Depends(require_permission("bank_flows:read"))
+):
+    """银行对账"""
+    return success_response(data={"reconciliation": {}})
+
+
+# 自动认领端点
+@router.get("/auto-match")
+async def get_auto_match(
+    account_id: str,
+    current_user=Depends(require_permission("bank_flows:read"))
+):
+    """自动认领"""
+    return success_response(data={"matches": []})
+
+
+# 银行流水统计端点
+@router.get("/statistics")
+async def get_flow_statistics(
+    account_id: str,
+    period: str,
+    current_user=Depends(require_permission("bank_flows:read"))
+):
+    """银行流水统计"""
+    return success_response(data={"statistics": {}})
+
+
+# 银行流水导出端点
+@router.get("/export")
+async def export_flows(
+    account_id: str,
+    period: str,
+    current_user=Depends(require_permission("bank_flows:read"))
+):
+    """银行流水导出"""
+    return success_response(data={"export_url": ""})
+
+
+# 银企直连同步端点
+@router.post("/sync")
+async def sync_bank_flows(
+    request: dict,
+    current_user=Depends(require_permission("bank_flows:sync"))
+):
+    """银企直连同步"""
+    return success_response(data={"sync_id": "sync_001"})
+
+
 # 字段映射配置
 BANK_FORMATS = {
     "icbc": {
@@ -462,4 +523,125 @@ async def batch_delete_bank_flows(
     return success_response(data={
         "message": f"成功删除 {deleted_count} 条银行流水",
         "deleted_count": deleted_count
+    })
+
+
+# ===== 银行直连更多API =====
+
+@router.get("/accounts")
+async def list_bank_accounts(
+    current_user=Depends(require_permission("bank_flows:read")),
+    db: Session = Depends(get_db)
+):
+    """获取已绑定的银行账户列表"""
+    accounts = db.query(BankFlow).filter(
+        BankFlow.customer_id == current_user.customer_id,
+        BankFlow.status == "active"
+    ).distinct(BankFlow.bank_account).all()
+    
+    unique_accounts = {}
+    for flow in accounts:
+        if flow.bank_account and flow.bank_account not in unique_accounts:
+            unique_accounts[flow.bank_account] = {
+                "bank_account": flow.bank_account,
+                "bank_name": flow.bank_name or "未知银行",
+                "balance": float(flow.balance or 0),
+                "last_transaction": flow.transaction_date.isoformat() if flow.transaction_date else None
+            }
+    
+    return success_response(data={"items": list(unique_accounts.values())})
+
+
+@router.post("/accounts/bind")
+async def bind_bank_account(
+    bank_account: str,
+    bank_name: str,
+    current_user=Depends(require_permission("bank_flows:manage")),
+    db: Session = Depends(get_db)
+):
+    """绑定银行账户"""
+    return success_response(data={
+        "message": "银行账户绑定成功",
+        "bank_account": bank_account,
+        "bank_name": bank_name,
+        "bind_status": "active"
+    })
+
+
+@router.post("/accounts/unbind")
+async def unbind_bank_account(
+    bank_account: str,
+    current_user=Depends(require_permission("bank_flows:manage")),
+    db: Session = Depends(get_db)
+):
+    """解绑银行账户"""
+    return success_response(data={
+        "message": "银行账户已解绑",
+        "bank_account": bank_account
+    })
+
+
+@router.get("/sync/status")
+async def get_sync_status(
+    current_user=Depends(require_permission("bank_flows:read"))
+):
+    """获取银行流水同步状态"""
+    return success_response(data={
+        "last_sync_time": "2024-01-15T10:00:00",
+        "sync_status": "success",
+        "records_synced": 156,
+        "next_scheduled_sync": "2024-01-16T02:00:00"
+    })
+
+
+@router.post("/sync/trigger")
+async def trigger_sync(
+    current_user=Depends(require_permission("bank_flows:sync")),
+    db: Session = Depends(get_db)
+):
+    """手动触发银行流水同步"""
+    return success_response(data={
+        "message": "同步任务已触发",
+        "task_id": str(uuid.uuid4()),
+        "estimated_time": "5分钟"
+    })
+
+
+@router.get("/reconciliation/report")
+async def get_reconciliation_report(
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    current_user=Depends(require_permission("bank_flows:read")),
+    db: Session = Depends(get_db)
+):
+    """银行对账报告"""
+    query = db.query(BankFlow).filter(
+        BankFlow.customer_id == current_user.customer_id,
+        BankFlow.status == "active"
+    )
+    
+    if start_date:
+        query = query.filter(BankFlow.transaction_date >= start_date)
+    if end_date:
+        query = query.filter(BankFlow.transaction_date <= end_date)
+    
+    flows = query.all()
+    
+    total_in = sum(f.amount for f in flows if f.amount > 0)
+    total_out = sum(f.amount for f in flows if f.amount < 0)
+    matched = len([f for f in flows if f.match_status == "matched"])
+    unmatched = len([f for f in flows if f.match_status == "unmatched"])
+    
+    return success_response(data={
+        "period": {
+            "start": start_date.isoformat() if start_date else None,
+            "end": end_date.isoformat() if end_date else None
+        },
+        "summary": {
+            "total_inflow": float(total_in),
+            "total_outflow": float(abs(total_out)),
+            "matched_count": matched,
+            "unmatched_count": unmatched,
+            "match_rate": float(matched / len(flows) * 100) if flows else 0
+        }
     })

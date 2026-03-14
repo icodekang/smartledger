@@ -1,0 +1,177 @@
+{
+  "test_time": "2026-03-14T18:08:36.738654",
+  "total": 28,
+  "pass": 28,
+  "fail": 0,
+  "pass_rate": "100.0%",
+  "results": [
+    {
+      "id": "TC-BANK-001",
+      "name": "银行流水",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-BANK-002",
+      "name": "银行账户",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-BANK-003",
+      "name": "银行列表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-AUDIT-004",
+      "name": "待审核",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-AUDIT-005",
+      "name": "审核统计",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-AUDIT-006",
+      "name": "我的任务",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-REP-007",
+      "name": "费用报表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-REP-008",
+      "name": "应收报表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-REP-009",
+      "name": "资产负债表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-REP-010",
+      "name": "利润表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-REP-011",
+      "name": "现金流量表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-REP-012",
+      "name": "科目余额表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-SYS-013",
+      "name": "系统角色",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-SYS-014",
+      "name": "系统日志",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-SYS-015",
+      "name": "系统配置",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-SYS-016",
+      "name": "健康检查",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-OP-017",
+      "name": "Webhook事件",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-OP-018",
+      "name": "插件列表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-OP-019",
+      "name": "Webhook列表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-MOB-020",
+      "name": "H5",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-MOB-021",
+      "name": "小程序",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-MOB-022",
+      "name": "Portal",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-AI-023",
+      "name": "异常规则",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-TAX-024",
+      "name": "税务地区",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-TAX-025",
+      "name": "税务认证",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-SEC-026",
+      "name": "安全合规",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-SEC-027",
+      "name": "安全审计",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-SEC-028",
+      "name": "访问控制",
+      "status": "PASS",
+      "code": 200
+    }
+  ]
+}

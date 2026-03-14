@@ -1,0 +1,93 @@
+{
+  "test_time": "2026-03-14T18:08:33.297338",
+  "total": 14,
+  "pass": 14,
+  "fail": 0,
+  "pass_rate": "100.0%",
+  "results": [
+    {
+      "id": "TC-AUTH-001",
+      "name": "当前用户",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-AUTH-002",
+      "name": "用户列表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-INV-003",
+      "name": "票据列表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-INV-004",
+      "name": "票据详情",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-INV-005",
+      "name": "创建票据",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-INV-006",
+      "name": "票据筛选",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-INV-007",
+      "name": "票据分页",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-VOU-008",
+      "name": "凭证列表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-VOU-009",
+      "name": "会计科目",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-VOU-010",
+      "name": "凭证规则",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-CUS-011",
+      "name": "客户列表",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-CUS-012",
+      "name": "客户详情",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-CUS-013",
+      "name": "创建客户",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "id": "TC-CUS-014",
+      "name": "客户筛选",
+      "status": "PASS",
+      "code": 200
+    }
+  ]
+}

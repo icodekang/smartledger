@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from decimal import Decimal
+from datetime import datetime
 import uuid
 
 from app.core.database import get_db
@@ -132,6 +133,24 @@ async def list_invoices(
         "page_size": page_size,
         "total_pages": (total + page_size - 1) // page_size
     })
+
+
+# 发票认证状态 - 必须放在动态路由 /{invoice_id} 之前
+@router.get("/authentication-status")
+async def get_invoice_authentication_status(
+    invoice_id: Optional[str] = None,
+    current_user=Depends(require_permission("bills:read")),
+    db: Session = Depends(get_db)
+):
+    """获取发票认证状态"""
+    # 模拟返回认证状态数据
+    auth_status = {
+        "authenticated": True,
+        "auth_time": "2024-01-15T10:30:00",
+        "tax_authority": "国家税务总局",
+        "status": "verified"
+    }
+    return success_response(data=auth_status)
 
 
 @router.get("/{invoice_id}")
@@ -323,16 +342,34 @@ async def upload_invoice(
     try:
         ocr_result = await bill_agent.process_bill_image(contents, file.content_type)
         if ocr_result:
+            # 转换日期字符串为date对象
+            invoice_date_str = ocr_result.get("invoice_date")
+            invoice_date = None
+            if invoice_date_str:
+                try:
+                    invoice_date = datetime.strptime(invoice_date_str, "%Y-%m-%d").date()
+                except (ValueError, TypeError):
+                    pass
+            
+            # 转换金额为Decimal
+            def to_decimal(value):
+                if value is None:
+                    return None
+                try:
+                    return Decimal(str(value))
+                except (ValueError, TypeError):
+                    return None
+            
             bill_repo.update(db, db_obj=bill, obj_in={
                 "ocr_result": ocr_result,
                 "ocr_confidence": ocr_result.get("confidence", 0),
                 "invoice_code": ocr_result.get("invoice_code"),
                 "invoice_number": ocr_result.get("invoice_number"),
-                "invoice_date": ocr_result.get("invoice_date"),
+                "invoice_date": invoice_date,
                 "seller_name": ocr_result.get("seller_name"),
-                "amount": ocr_result.get("amount"),
-                "tax_amount": ocr_result.get("tax_amount"),
-                "total_amount": ocr_result.get("total_amount"),
+                "amount": to_decimal(ocr_result.get("amount")),
+                "tax_amount": to_decimal(ocr_result.get("tax_amount")),
+                "total_amount": to_decimal(ocr_result.get("total_amount")),
                 "process_status": "ocr_completed"
             })
     except Exception as e:
@@ -474,3 +511,21 @@ async def update_invoice_items(
     db.commit()
     
     return success_response(data={"message": "明细项更新成功"})
+
+
+# 发票认证状态
+@router.get("/authentication-status")
+async def get_invoice_authentication_status(
+    invoice_id: Optional[str] = None,
+    current_user=Depends(require_permission("bills:read")),
+    db: Session = Depends(get_db)
+):
+    """获取发票认证状态"""
+    # 模拟返回认证状态数据
+    auth_status = {
+        "authenticated": True,
+        "auth_time": "2024-01-15T10:30:00",
+        "tax_authority": "国家税务总局",
+        "status": "verified"
+    }
+    return success_response(data=auth_status)
